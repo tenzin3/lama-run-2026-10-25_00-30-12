@@ -43,4 +43,4 @@ Changed scripts:
 
 New prefabs: `Segment_Corner_Left` and `Segment_Corner_Right` in `Assets/Prefabs/Segments/`. The scene (`SampleScene.unity`) was updated to use them.
 
-**Testing notes:** _(to fill in after pressing Play)_
+**Testing notes:** Tested with ▶ Play: it worked. Corners appear, turning left and right works, and the rest of the game (lanes, jump, slide, coins, Game Over / Restart) still works. No fixes needed.
