@@ -10353,6 +10353,12 @@ MonoBehaviour:
   _rightCornerPrefab: {fileID: 4140310875272979538, guid: bd64a7a99f133452596ebff5657121dd, type: 3}
   _cornerChance: 0.35
   _minStraightBetweenCorners: 3
+  _ropeBridgePrefab: {fileID: 8701712426322352898, guid: 3d627d7147df147b0a06744d30f9c60f, type: 3}
+  _gapPrefab: {fileID: 5443436994818573734, guid: 92beba0d8413841309a76aec7168b9ae, type: 3}
+  _goldenRooftopPrefab: {fileID: 2738899321797885881, guid: e8624472e99a7403db2eea1284865a59, type: 3}
+  _gateArchPrefab: {fileID: 9199274918965809309, guid: 53a1f81d018a84d658f45dc5df2be67f, type: 3}
+  _specialSegmentChance: 0.35
+  _gapMinDistance: 200
   _lowBarrierPrefab: {fileID: 6869450817320403696, guid: f012ea913c62544c9b733ef93dd71512, type: 3}
   _highBeamPrefab: {fileID: 5982949664047014855, guid: 93bb23e768fb842d3a33f43c15d95253, type: 3}
   _laneBlockPrefab: {fileID: 5421604819840387236, guid: c52329e8ae4a24acd987c73209ee2d88, type: 3}

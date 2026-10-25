@@ -23,6 +23,21 @@ public class TrackManager : MonoBehaviour
     [Tooltip("Minimum straight segments between corners.")]
     [SerializeField] private int _minStraightBetweenCorners = 3;
 
+    [Header("Special Segment Prefabs")]
+    [Tooltip("Wooden plank rope bridge over open air with cloud sea below.")]
+    [SerializeField] private TrackSegment _ropeBridgePrefab;
+    [Tooltip("Void gap in path across all lanes that must be jumped (only after 200m).")]
+    [SerializeField] private TrackSegment _gapPrefab;
+    [Tooltip("Golden temple rooftop with upturned eaves and butter lamps.")]
+    [SerializeField] private TrackSegment _goldenRooftopPrefab;
+    [Tooltip("Whitewashed stone arch with maroon band and low lintel requiring slide.")]
+    [SerializeField] private TrackSegment _gateArchPrefab;
+    [Tooltip("Chance to spawn a special segment when eligible.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float _specialSegmentChance = 0.35f;
+    [Tooltip("Minimum distance traveled before gaps can start spawning.")]
+    [SerializeField] private float _gapMinDistance = 200f;
+
     [Header("Difficulty & Dynamic Obstacles")]
     [SerializeField] private Obstacle _lowBarrierPrefab;
     [SerializeField] private Obstacle _highBeamPrefab;
@@ -41,6 +56,8 @@ public class TrackManager : MonoBehaviour
     private Quaternion _nextSpawnRotation = Quaternion.identity;
     private int _straightSinceCorner = 0;
     private float _totalPathSpawned = 0f;
+    private bool _lastSegmentWasSpecial = false;
+    private bool _lastSegmentWasCorner = false;
     private readonly Queue<TrackSegment> _activeSegments = new Queue<TrackSegment>();
 
     public CornerSegment LeftCornerPrefab
@@ -55,6 +72,42 @@ public class TrackManager : MonoBehaviour
         set => _rightCornerPrefab = value;
     }
 
+    public TrackSegment RopeBridgePrefab
+    {
+        get => _ropeBridgePrefab;
+        set => _ropeBridgePrefab = value;
+    }
+
+    public TrackSegment GapPrefab
+    {
+        get => _gapPrefab;
+        set => _gapPrefab = value;
+    }
+
+    public TrackSegment GoldenRooftopPrefab
+    {
+        get => _goldenRooftopPrefab;
+        set => _goldenRooftopPrefab = value;
+    }
+
+    public TrackSegment GateArchPrefab
+    {
+        get => _gateArchPrefab;
+        set => _gateArchPrefab = value;
+    }
+
+    public float SpecialSegmentChance
+    {
+        get => _specialSegmentChance;
+        set => _specialSegmentChance = value;
+    }
+
+    public float GapMinDistance
+    {
+        get => _gapMinDistance;
+        set => _gapMinDistance = value;
+    }
+
     private void Start()
     {
         if (_player == null)
@@ -67,6 +120,9 @@ public class TrackManager : MonoBehaviour
         {
             _playerController = _player.GetComponent<PlayerController>();
         }
+
+        _lastSegmentWasCorner = false;
+        _lastSegmentWasSpecial = false;
 
         // Spawn initial safe straight segments
         for (int i = 0; i < _initialSafeSegments; i++)
@@ -109,12 +165,16 @@ public class TrackManager : MonoBehaviour
 
     private TrackSegment ChooseNextSegmentPrefab()
     {
+        // Rule: Never a special segment directly before a corner (if last was special, corner cannot spawn now)
         bool canSpawnCorner = _straightSinceCorner >= _minStraightBetweenCorners
+            && !_lastSegmentWasSpecial
             && (_leftCornerPrefab != null || _rightCornerPrefab != null);
 
         if (canSpawnCorner && Random.value < _cornerChance)
         {
             _straightSinceCorner = 0;
+            _lastSegmentWasCorner = true;
+            _lastSegmentWasSpecial = false;
 
             if (_leftCornerPrefab != null && _rightCornerPrefab != null)
             {
@@ -124,7 +184,49 @@ public class TrackManager : MonoBehaviour
         }
 
         _straightSinceCorner++;
+
+        // Rule: Never two special segments in a row, never directly after a corner,
+        // and if a special segment spawns, the next segment cannot be a corner (enforced by canSpawnCorner checking !_lastSegmentWasSpecial).
+        float currentDist = _playerController != null ? _playerController.DistanceTraveled : _totalPathSpawned;
+        List<TrackSegment> specialCandidates = GetAvailableSpecialPrefabs(currentDist);
+
+        bool canSpawnSpecial = !_lastSegmentWasSpecial
+            && !_lastSegmentWasCorner
+            && specialCandidates.Count > 0;
+
+        if (canSpawnSpecial && Random.value < _specialSegmentChance)
+        {
+            _lastSegmentWasSpecial = true;
+            _lastSegmentWasCorner = false;
+            return specialCandidates[Random.Range(0, specialCandidates.Count)];
+        }
+
+        _lastSegmentWasSpecial = false;
+        _lastSegmentWasCorner = false;
         return GetDifficultyWeightedStraightSegmentPrefab();
+    }
+
+    private List<TrackSegment> GetAvailableSpecialPrefabs(float currentDist)
+    {
+        List<TrackSegment> list = new List<TrackSegment>();
+        if (_ropeBridgePrefab != null) list.Add(_ropeBridgePrefab);
+        if (_goldenRooftopPrefab != null) list.Add(_goldenRooftopPrefab);
+        if (_gateArchPrefab != null) list.Add(_gateArchPrefab);
+
+        // Gap segment only spawns after 200m
+        if (currentDist >= _gapMinDistance && _gapPrefab != null)
+        {
+            list.Add(_gapPrefab);
+        }
+
+        return list;
+    }
+
+    private bool IsSpecialSegment(TrackSegment segment, TrackSegment prefab)
+    {
+        if (segment != null && segment.IsSpecial) return true;
+        if (prefab != null && (prefab == _ropeBridgePrefab || prefab == _gapPrefab || prefab == _goldenRooftopPrefab || prefab == _gateArchPrefab || prefab.IsSpecial)) return true;
+        return false;
     }
 
     private TrackSegment GetDifficultyWeightedStraightSegmentPrefab()
@@ -175,8 +277,8 @@ public class TrackManager : MonoBehaviour
         _nextSpawnPosition = segment.EndPosition;
         _nextSpawnRotation = segment.EndRotation;
 
-        // Apply dynamic obstacle scaling for straight segments as distance increases
-        if (!segment.IsCorner)
+        // Apply dynamic obstacle scaling for standard straight segments as distance increases
+        if (!segment.IsCorner && !IsSpecialSegment(segment, prefab))
         {
             ApplyDynamicObstacles(segment);
         }

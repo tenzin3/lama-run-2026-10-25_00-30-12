@@ -5,9 +5,11 @@ public class TrackSegment : MonoBehaviour
     [SerializeField] private float _length = 30f;
     [SerializeField] private Vector3 _localEndPosition = new Vector3(0f, 0f, 30f);
     [SerializeField] private Vector3 _localEndRotation = Vector3.zero;
+    [SerializeField] private bool _isSpecial = false;
 
     public float Length => _length;
     public virtual bool IsCorner => false;
+    public virtual bool IsSpecial => _isSpecial;
 
     public float StartZ => transform.position.z;
     public float EndZ => transform.position.z + _length;

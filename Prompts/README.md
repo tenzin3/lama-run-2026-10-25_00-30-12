@@ -10,6 +10,7 @@ Every prompt given to Unity Assistant, in order. Each file has the exact prompt,
 | 04 | [Game feel](04-game-feel.md) | Start, pause and Game Over screens, best distance, code-made sounds, dust and sparkle effects, camera shake, rising difficulty |
 | 05 | [Fix sparkle and sky](05-fix-sparkle-and-sky.md) | Sparkle and dust get a proper particle material; backdrop mountains pushed back so the sky shows. Two attempts, 163 credits |
 | 06 | [Tenzin character](06-tenzin-character.md) | The capsule is replaced by the 3D Tenzin with Idle, Run, Jump, Slide and Fall animations; collider and camera fitted to him |
+| 07 | [Track variety](07-track-variety.md) | Rope bridge, gap to jump, golden rooftop and gate arch to slide under, mixed into the track with spacing rules. 158 credits |
 
 ## Adding a prompt
 
