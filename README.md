@@ -6,15 +6,15 @@ A Temple Run–style endless runner starring Tenzin, a young monk, built in Unit
 
 ## How it looks
 
-![Tenzin Run after prompt 04: an orange capsule runs along a stone monastery path under prayer flags, with distance, lamp count, speed and a pause button on screen](Screenshots/04-game-feel.png)
+![Tenzin Run after prompt 05: an orange capsule runs along a stone monastery path under prayer flags, with distant pale mountains, a warm sky and small gold sparkles from a collected lamp](Screenshots/05-fix-sparkle-and-sky.png)
 
-*Latest: after [prompt 04](Prompts/04-game-feel.md), 25 Oct 2026. A capsule still stands in for Tenzin.*
+*Latest: after [prompt 05](Prompts/05-fix-sparkle-and-sky.md), 25 Oct 2026. A capsule still stands in for Tenzin.*
 
 ### Progress
 
-| 01 · Basics | 03 · Monastery look | 04 · Game feel |
-|---|---|---|
-| <img src="Screenshots/01-endless-runner-basics.png" width="260" alt="Grey prototype"> | <img src="Screenshots/03-monastery-look.png" width="260" alt="Monastery look"> | <img src="Screenshots/04-game-feel.png" width="260" alt="Game feel"> |
+| 01 · Basics | 03 · Monastery look | 04 · Game feel | 05 · Sparkle and sky fix |
+|---|---|---|---|
+| <img src="Screenshots/01-endless-runner-basics.png" width="200" alt="Grey prototype"> | <img src="Screenshots/03-monastery-look.png" width="200" alt="Monastery look"> | <img src="Screenshots/04-game-feel.png" width="200" alt="Game feel"> | <img src="Screenshots/05-fix-sparkle-and-sky.png" width="200" alt="Sparkle and sky fix"> |
 
 Every screenshot is kept in [`Screenshots/`](Screenshots/).
 
