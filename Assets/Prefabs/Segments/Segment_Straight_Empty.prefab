@@ -4410,6 +4410,7 @@ MonoBehaviour:
   _length: 30
   _localEndPosition: {x: 0, y: 0, z: 30}
   _localEndRotation: {x: 0, y: 0, z: 0}
+  _isSpecial: 0
 --- !u!1 &3410613464601369458
 GameObject:
   m_ObjectHideFlags: 0

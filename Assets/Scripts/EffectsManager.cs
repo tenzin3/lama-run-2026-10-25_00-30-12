@@ -68,16 +68,23 @@ public class EffectsManager : MonoBehaviour
         {
             _dustMat = new Material(particleShader);
             _dustMat.name = "FX_DustMat";
-            _dustMat.mainTexture = _softCircleTex;
             if (_dustMat.HasProperty("_BaseMap"))
             {
                 _dustMat.SetTexture("_BaseMap", _softCircleTex);
             }
+            if (_dustMat.HasProperty("_MainTex"))
+            {
+                _dustMat.SetTexture("_MainTex", _softCircleTex);
+            }
+            _dustMat.mainTexture = _softCircleTex;
             _dustMat.SetColor("_BaseColor", Color.white);
             _dustMat.SetFloat("_Surface", 1f); // Transparent
+            _dustMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             _dustMat.SetFloat("_Blend", 0f);   // Alpha blend
             _dustMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             _dustMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            _dustMat.SetInt("_SrcBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
+            _dustMat.SetInt("_DstBlendAlpha", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             _dustMat.SetInt("_ZWrite", 0);
             _dustMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             _dustMat.SetOverrideTag("RenderType", "Transparent");
@@ -85,16 +92,23 @@ public class EffectsManager : MonoBehaviour
             // Lamp sparkle material: additive, gold, soft
             _sparkleMat = new Material(particleShader);
             _sparkleMat.name = "FX_SparkleMat";
-            _sparkleMat.mainTexture = _softCircleTex;
             if (_sparkleMat.HasProperty("_BaseMap"))
             {
                 _sparkleMat.SetTexture("_BaseMap", _softCircleTex);
             }
+            if (_sparkleMat.HasProperty("_MainTex"))
+            {
+                _sparkleMat.SetTexture("_MainTex", _softCircleTex);
+            }
+            _sparkleMat.mainTexture = _softCircleTex;
             _sparkleMat.SetColor("_BaseColor", Color.white);
             _sparkleMat.SetFloat("_Surface", 1f); // Transparent
+            _sparkleMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             _sparkleMat.SetFloat("_Blend", 2f);   // Additive
             _sparkleMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             _sparkleMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            _sparkleMat.SetInt("_SrcBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
+            _sparkleMat.SetInt("_DstBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
             _sparkleMat.SetInt("_ZWrite", 0);
             _sparkleMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             _sparkleMat.SetOverrideTag("RenderType", "Transparent");

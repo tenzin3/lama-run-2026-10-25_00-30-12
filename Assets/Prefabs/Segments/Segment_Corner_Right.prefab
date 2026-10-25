@@ -6482,6 +6482,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b105cb118d7547c286ae2b3aac23f1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OffEdgeTrigger
+  _onlyWhenGrounded: 0
 --- !u!1 &6759962289020809084
 GameObject:
   m_ObjectHideFlags: 0
@@ -8088,6 +8089,7 @@ MonoBehaviour:
   _length: 33.4
   _localEndPosition: {x: 15, y: 0, z: 18.4}
   _localEndRotation: {x: 0, y: 90, z: 0}
+  _isSpecial: 0
   _turnDirection: 1
   _localPivot: {x: 0, y: 0, z: 18.4}
   _turnZoneStartLocalZ: 7

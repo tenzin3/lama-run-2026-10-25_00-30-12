@@ -2107,10 +2107,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FollowCamera
   _target: {fileID: 361822942}
-  _offset: {x: 0, y: 3.2, z: -4.8}
+  _offset: {x: 0, y: 2.6, z: -3.8}
   _ySmoothSpeed: 6
   _rotationSmoothTime: 0.3
-  _pitchAngle: 17.5
+  _pitchAngle: 14
   _baseFOV: 60
   _maxFOV: 69
   _fovLerpSpeed: 3

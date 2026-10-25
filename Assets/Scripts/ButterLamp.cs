@@ -34,6 +34,12 @@ public class ButterLamp : MonoBehaviour
         if (_pointLight != null)
         {
             _pointLight.enabled = _hasLight;
+            _pointLight.range = 2.5f;
+            int playerLayer = LayerMask.NameToLayer("Player");
+            if (playerLayer >= 0)
+            {
+                _pointLight.cullingMask &= ~(1 << playerLayer);
+            }
         }
     }
 
