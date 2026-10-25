@@ -35,3 +35,5 @@ What the Assistant created:
 Also: prefabs in `Assets/Prefabs/` (Player, Coin, three obstacle types, track segments), materials in `Assets/Materials/`, and the setup in `Assets/Scenes/SampleScene.unity`.
 
 **Testing notes:** Tested with ▶ Play: it worked. The capsule runs forward, switches lanes, jumps and slides; the track, obstacles, coins, UI and Game Over / Restart all work. No fixes needed.
+
+![The game after this prompt](../Screenshots/01-endless-runner-basics.png)
