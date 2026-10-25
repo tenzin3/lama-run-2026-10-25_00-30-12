@@ -361,7 +361,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0.15643448, y: 0, z: 0, w: 0.98768836}
-  m_LocalPosition: {x: 0, y: 4, z: -6}
+  m_LocalPosition: {x: 0, y: 3.8, z: -5.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -425,8 +425,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FollowCamera
   _target: {fileID: 361822942}
   _offset: {x: 0, y: 4, z: -6}
-  _xSmoothSpeed: 12
   _ySmoothSpeed: 6
+  _rotationSmoothTime: 0.3
   _pitchAngle: 18
 --- !u!1001 &361822940
 PrefabInstance:
@@ -724,7 +724,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 3436829145
   m_fontColor: {r: 0.85, g: 0.85, b: 0.85, a: 0.8}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -737,7 +737,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -888,7 +888,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4280736255
   m_fontColor: {r: 1, g: 0.85, b: 0.15, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -901,7 +901,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1086,7 +1086,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1460,7 +1460,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 2801795071
   m_fontColor: {r: 1, g: 1, b: 1, a: 0.65}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -1473,7 +1473,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -2019,7 +2019,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
   m_UseReflectionProbes: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -2219,6 +2219,10 @@ MonoBehaviour:
   - {fileID: 5145878692551783792, guid: 29c3dd3a961bd4b69a336713b1a0079c, type: 3}
   - {fileID: 7332775381668446393, guid: bf352de849d8e4edc89eb6b7e90b90d7, type: 3}
   - {fileID: 148977289557626984, guid: 8fbb50ab6cbd3487aa6efdbaf203b0b1, type: 3}
+  _leftCornerPrefab: {fileID: 3856124689887762705, guid: 7a7f32d4a4028493e90c83eacf726da4, type: 3}
+  _rightCornerPrefab: {fileID: 4140310875272979538, guid: bd64a7a99f133452596ebff5657121dd, type: 3}
+  _cornerChance: 0.35
+  _minStraightBetweenCorners: 3
   _viewDistanceAhead: 160
   _destroyDistanceBehind: 40
   _initialSafeSegments: 2

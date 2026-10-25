@@ -37,10 +37,18 @@ public class PlayerController : MonoBehaviour
 
     // Movement state
     private int _currentLane = 0; // -1: Left, 0: Mid, 1: Right
-    private float _targetX = 0f;
+    private float _targetLateralOffset = 0f;
     private float _verticalVelocity = 0f;
     private bool _isGrounded = true;
     private float _groundY = 0f;
+
+    // Direction & Track line state
+    private Quaternion _targetHeading = Quaternion.identity;
+    private Vector3 _trackLineAnchor = Vector3.zero;
+    private float _distanceTraveled = 0f;
+
+    // Corner / Turn Zone state
+    private CornerSegment _currentCorner;
 
     // Slide state
     private bool _isSliding = false;
@@ -64,6 +72,11 @@ public class PlayerController : MonoBehaviour
     public bool IsSliding => _isSliding;
     public bool IsGrounded => _isGrounded;
     public int CurrentLane => _currentLane;
+    public float DistanceTraveled => _distanceTraveled;
+    public float TargetYaw => _targetHeading.eulerAngles.y;
+    public Vector3 ForwardDirection => _targetHeading * Vector3.forward;
+    public Vector3 RightDirection => _targetHeading * Vector3.right;
+    public bool IsInTurnZone => _currentCorner != null && !_currentCorner.HasTurned && _currentCorner.IsPlayerInTurnZone(transform.position);
 
     private void Awake()
     {
@@ -88,17 +101,37 @@ public class PlayerController : MonoBehaviour
         }
 
         _groundY = transform.position.y;
+        _targetHeading = transform.rotation;
+        _trackLineAnchor = transform.position;
+        _targetLateralOffset = _currentLane * _laneDistance;
     }
 
     private void Update()
     {
-        if (_isDead) return;
+        if (_isDead)
+        {
+            // Continue falling physics if dead from falling off edge
+            UpdateVerticalMovement();
+            return;
+        }
 
+        CheckCornerEdge();
         HandleInput();
         UpdateSlide();
         UpdateVerticalMovement();
         UpdateHorizontalMovement();
         UpdateForwardMovement();
+    }
+
+    private void CheckCornerEdge()
+    {
+        if (_currentCorner != null && !_currentCorner.HasTurned)
+        {
+            if (_currentCorner.HasPlayerRunOffEdge(transform.position))
+            {
+                FallOffEdge();
+            }
+        }
     }
 
     private void HandleInput()
@@ -109,11 +142,11 @@ public class PlayerController : MonoBehaviour
         {
             if (keyboard.leftArrowKey.wasPressedThisFrame || keyboard.aKey.wasPressedThisFrame)
             {
-                ChangeLane(-1);
+                OnTurnOrLaneInput(TurnDirection.Left);
             }
             else if (keyboard.rightArrowKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame)
             {
-                ChangeLane(1);
+                OnTurnOrLaneInput(TurnDirection.Right);
             }
 
             if (keyboard.spaceKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame)
@@ -183,13 +216,92 @@ public class PlayerController : MonoBehaviour
     {
         if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y))
         {
-            if (delta.x > 0f) ChangeLane(1);
-            else ChangeLane(-1);
+            if (delta.x > 0f) OnTurnOrLaneInput(TurnDirection.Right);
+            else OnTurnOrLaneInput(TurnDirection.Left);
         }
         else
         {
             if (delta.y > 0f) Jump();
             else Slide();
+        }
+    }
+
+    private void OnTurnOrLaneInput(TurnDirection dir)
+    {
+        if (IsInTurnZone)
+        {
+            AttemptTurn(dir);
+        }
+        else
+        {
+            ChangeLane((int)dir);
+        }
+    }
+
+    public void AttemptTurn(TurnDirection dir)
+    {
+        if (_currentCorner == null || _isDead) return;
+
+        if (dir == _currentCorner.Direction)
+        {
+            ExecuteTurn(_currentCorner);
+        }
+        else
+        {
+            // Turned wrong direction in corner -> run off edge / Game Over
+            FallOffEdge();
+        }
+    }
+
+    private void ExecuteTurn(CornerSegment corner)
+    {
+        corner.OnTurnSuccess();
+
+        Vector3 oldForward = ForwardDirection;
+        float turnAngle = corner.Direction == TurnDirection.Right ? 90f : -90f;
+        _targetHeading = _targetHeading * Quaternion.Euler(0f, turnAngle, 0f);
+        transform.rotation = _targetHeading;
+
+        Vector3 pivot = corner.PivotPosition;
+        _trackLineAnchor = pivot;
+
+        // Keep the exact same lane index in the new direction
+        _targetLateralOffset = _currentLane * _laneDistance;
+
+        // Position player on the new track line, preserving forward distance past pivot
+        Vector3 fromPivot = transform.position - pivot;
+        float forwardProgress = Vector3.Dot(fromPivot, oldForward);
+        float newForwardProgress = Mathf.Max(0f, forwardProgress);
+
+        Vector3 newPos = pivot + RightDirection * _targetLateralOffset + ForwardDirection * newForwardProgress;
+        newPos.y = transform.position.y;
+        transform.position = newPos;
+    }
+
+    public void EnterCorner(CornerSegment corner)
+    {
+        _currentCorner = corner;
+    }
+
+    public void ExitCorner(CornerSegment corner)
+    {
+        if (_currentCorner == corner)
+        {
+            _currentCorner = null;
+        }
+    }
+
+    public void FallOffEdge()
+    {
+        if (_isDead) return;
+
+        _isDead = true;
+        _isGrounded = false;
+        _verticalVelocity = -12f;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.GameOver();
         }
     }
 
@@ -199,7 +311,7 @@ public class PlayerController : MonoBehaviour
         if (nextLane != _currentLane)
         {
             _currentLane = nextLane;
-            _targetX = _currentLane * _laneDistance;
+            _targetLateralOffset = _currentLane * _laneDistance;
         }
     }
 
@@ -282,7 +394,7 @@ public class PlayerController : MonoBehaviour
             _verticalVelocity -= _gravity * Time.deltaTime;
             pos.y += _verticalVelocity * Time.deltaTime;
 
-            if (pos.y <= _groundY)
+            if (!_isDead && pos.y <= _groundY)
             {
                 pos.y = _groundY;
                 _verticalVelocity = 0f;
@@ -299,8 +411,14 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateHorizontalMovement()
     {
-        Vector3 pos = transform.position;
-        pos.x = Mathf.MoveTowards(pos.x, _targetX, _laneSwitchSpeed * Time.deltaTime);
+        Vector3 toPlayer = transform.position - _trackLineAnchor;
+        float currentForwardDist = Vector3.Dot(toPlayer, ForwardDirection);
+        float currentLat = Vector3.Dot(toPlayer, RightDirection);
+
+        float newLat = Mathf.MoveTowards(currentLat, _targetLateralOffset, _laneSwitchSpeed * Time.deltaTime);
+
+        Vector3 pos = _trackLineAnchor + ForwardDirection * currentForwardDist + RightDirection * newLat;
+        pos.y = transform.position.y;
         transform.position = pos;
     }
 
@@ -312,9 +430,9 @@ public class PlayerController : MonoBehaviour
             speed = GameManager.Instance.CurrentSpeed;
         }
 
-        Vector3 pos = transform.position;
-        pos.z += speed * Time.deltaTime;
-        transform.position = pos;
+        float deltaDist = speed * Time.deltaTime;
+        _distanceTraveled += deltaDist;
+        transform.position += ForwardDirection * deltaDist;
     }
 
     private void OnTriggerEnter(Collider other)

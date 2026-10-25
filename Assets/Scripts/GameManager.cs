@@ -62,7 +62,7 @@ public class GameManager : MonoBehaviour
         // Track distance
         if (_player != null)
         {
-            _distance = Mathf.Max(0, Mathf.FloorToInt(_player.transform.position.z));
+            _distance = Mathf.Max(0, Mathf.FloorToInt(_player.DistanceTraveled));
         }
 
         // Update HUD

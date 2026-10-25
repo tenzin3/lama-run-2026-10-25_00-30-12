@@ -6,11 +6,22 @@ public class TrackManager : MonoBehaviour
     [Header("Player Target")]
     [SerializeField] private Transform _player;
 
-    [Header("Segment Prefabs")]
+    [Header("Straight Segment Prefabs")]
     [Tooltip("Starting safe straight segment without obstacles.")]
     [SerializeField] private TrackSegment _startSegmentPrefab;
-    [Tooltip("Pool of segments containing hazards, obstacles, and coin patterns.")]
+    [Tooltip("Pool of straight segments containing hazards, obstacles, and coin patterns.")]
     [SerializeField] private TrackSegment[] _obstacleSegmentPrefabs;
+
+    [Header("Corner Segment Prefabs")]
+    [Tooltip("Corner segment turning 90 degrees Left.")]
+    [SerializeField] private CornerSegment _leftCornerPrefab;
+    [Tooltip("Corner segment turning 90 degrees Right.")]
+    [SerializeField] private CornerSegment _rightCornerPrefab;
+    [Tooltip("Chance to spawn a corner when eligible.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float _cornerChance = 0.35f;
+    [Tooltip("Minimum straight segments between corners.")]
+    [SerializeField] private int _minStraightBetweenCorners = 3;
 
     [Header("Spawn Settings")]
     [Tooltip("Distance ahead of player to keep populated with track segments.")]
@@ -20,8 +31,24 @@ public class TrackManager : MonoBehaviour
     [Tooltip("Number of safe segments spawned at the very beginning.")]
     [SerializeField] private int _initialSafeSegments = 2;
 
-    private float _nextSpawnZ = 0f;
+    private PlayerController _playerController;
+    private Vector3 _nextSpawnPosition = Vector3.zero;
+    private Quaternion _nextSpawnRotation = Quaternion.identity;
+    private int _straightSinceCorner = 0;
+    private float _totalPathSpawned = 0f;
     private readonly Queue<TrackSegment> _activeSegments = new Queue<TrackSegment>();
+
+    public CornerSegment LeftCornerPrefab
+    {
+        get => _leftCornerPrefab;
+        set => _leftCornerPrefab = value;
+    }
+
+    public CornerSegment RightCornerPrefab
+    {
+        get => _rightCornerPrefab;
+        set => _rightCornerPrefab = value;
+    }
 
     private void Start()
     {
@@ -31,10 +58,16 @@ public class TrackManager : MonoBehaviour
             if (pc != null) _player = pc.transform;
         }
 
-        // Spawn initial safe segments
+        if (_player != null)
+        {
+            _playerController = _player.GetComponent<PlayerController>();
+        }
+
+        // Spawn initial safe straight segments
         for (int i = 0; i < _initialSafeSegments; i++)
         {
             SpawnSegment(_startSegmentPrefab);
+            _straightSinceCorner++;
         }
 
         // Populate initial distance ahead
@@ -53,9 +86,11 @@ public class TrackManager : MonoBehaviour
     {
         if (_player == null) return;
 
-        while (_nextSpawnZ - _player.position.z < _viewDistanceAhead)
+        float playerDist = _playerController != null ? _playerController.DistanceTraveled : _player.position.z;
+
+        while (_totalPathSpawned - playerDist < _viewDistanceAhead)
         {
-            TrackSegment prefabToSpawn = GetRandomSegmentPrefab();
+            TrackSegment prefabToSpawn = ChooseNextSegmentPrefab();
             if (prefabToSpawn != null)
             {
                 SpawnSegment(prefabToSpawn);
@@ -67,7 +102,27 @@ public class TrackManager : MonoBehaviour
         }
     }
 
-    private TrackSegment GetRandomSegmentPrefab()
+    private TrackSegment ChooseNextSegmentPrefab()
+    {
+        bool canSpawnCorner = _straightSinceCorner >= _minStraightBetweenCorners
+            && (_leftCornerPrefab != null || _rightCornerPrefab != null);
+
+        if (canSpawnCorner && Random.value < _cornerChance)
+        {
+            _straightSinceCorner = 0;
+
+            if (_leftCornerPrefab != null && _rightCornerPrefab != null)
+            {
+                return Random.value < 0.5f ? _leftCornerPrefab : _rightCornerPrefab;
+            }
+            return _leftCornerPrefab != null ? _leftCornerPrefab : _rightCornerPrefab;
+        }
+
+        _straightSinceCorner++;
+        return GetRandomStraightSegmentPrefab();
+    }
+
+    private TrackSegment GetRandomStraightSegmentPrefab()
     {
         if (_obstacleSegmentPrefabs == null || _obstacleSegmentPrefabs.Length == 0)
         {
@@ -82,18 +137,24 @@ public class TrackManager : MonoBehaviour
     {
         if (prefab == null) return;
 
-        Vector3 spawnPos = new Vector3(0f, 0f, _nextSpawnZ);
-        TrackSegment segment = Instantiate(prefab, spawnPos, Quaternion.identity, transform);
+        TrackSegment segment = Instantiate(prefab, _nextSpawnPosition, _nextSpawnRotation, transform);
         _activeSegments.Enqueue(segment);
-        _nextSpawnZ += segment.Length;
+
+        _totalPathSpawned += segment.Length;
+        segment.PathEndDistance = _totalPathSpawned;
+
+        _nextSpawnPosition = segment.EndPosition;
+        _nextSpawnRotation = segment.EndRotation;
     }
 
     private void RecyclePassedSegments()
     {
+        float playerDist = _playerController != null ? _playerController.DistanceTraveled : _player.position.z;
+
         while (_activeSegments.Count > 0)
         {
             TrackSegment oldest = _activeSegments.Peek();
-            if (_player.position.z - oldest.EndZ > _destroyDistanceBehind)
+            if (playerDist - oldest.PathEndDistance > _destroyDistanceBehind)
             {
                 _activeSegments.Dequeue();
                 Destroy(oldest.gameObject);
@@ -105,3 +166,4 @@ public class TrackManager : MonoBehaviour
         }
     }
 }
+
