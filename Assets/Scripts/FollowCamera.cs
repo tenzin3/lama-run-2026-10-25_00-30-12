@@ -6,7 +6,7 @@ public class FollowCamera : MonoBehaviour
 
     [Header("Target & Offset")]
     [SerializeField] private Transform _target;
-    [SerializeField] private Vector3 _offset = new Vector3(0f, 3.8f, -5.5f);
+    [SerializeField] private Vector3 _offset = new Vector3(0f, 3.2f, -4.8f);
 
     [Header("Smoothing")]
     [Tooltip("Smoothing factor for vertical (Y) following.")]
@@ -15,7 +15,7 @@ public class FollowCamera : MonoBehaviour
     [SerializeField] private float _rotationSmoothTime = 0.3f;
 
     [Header("Rotation")]
-    [SerializeField] private float _pitchAngle = 18f;
+    [SerializeField] private float _pitchAngle = 17.5f;
 
     [Header("Dynamic FOV")]
     [SerializeField] private float _baseFOV = 60f;

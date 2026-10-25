@@ -19,21 +19,51 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Fast fall acceleration multiplier when swiping down mid-air.")]
     [SerializeField] private float _fastFallMultiplier = 1.6f;
 
-    [Header("Slide")]
+    [Header("Slide & Collider Sizing")]
     [Tooltip("Duration of slide in seconds.")]
     [SerializeField] private float _slideDuration = 0.75f;
-    [Tooltip("Capsule collider height when sliding.")]
-    [SerializeField] private float _slidingColliderHeight = 0.8f;
+    [Tooltip("Capsule collider height when standing (Tenzin is 1.48m tall).")]
+    [SerializeField] private float _standingColliderHeight = 1.48f;
+    [Tooltip("Capsule collider center Y when standing.")]
+    [SerializeField] private float _standingColliderCenterY = 0.74f;
+    [Tooltip("Capsule collider radius.")]
+    [SerializeField] private float _colliderRadius = 0.30f;
+    [Tooltip("Capsule collider height when sliding (low enough to slide under high beams).")]
+    [SerializeField] private float _slidingColliderHeight = 0.65f;
     [Tooltip("Capsule collider center Y when sliding.")]
-    [SerializeField] private float _slidingColliderCenterY = 0.4f;
+    [SerializeField] private float _slidingColliderCenterY = 0.325f;
 
-    [Header("Visual Model Reference")]
+    [Header("Visual Model & Animation")]
     [Tooltip("Transform of the child visual model (capsule or character mesh).")]
     [SerializeField] private Transform _visualModel;
+    [Tooltip("Animator driving Tenzin's character animations.")]
+    [SerializeField] private Animator _animator;
+    [Tooltip("Base running speed at which the run animation plays at 1.0x speed.")]
+    [SerializeField] private float _baseRunAnimSpeed = 12.0f;
+    [Tooltip("Crossfade duration between animation states in seconds.")]
+    [SerializeField] private float _animCrossFadeDuration = 0.1f;
+
+    [Header("Turn & Lean Settings")]
+    [Tooltip("Speed in degrees/sec at which the character rotates toward the new direction.")]
+    [SerializeField] private float _turnSmoothSpeed = 360.0f;
+    [Tooltip("Maximum roll angle (degrees) to bank/lean into lane changes.")]
+    [SerializeField] private float _maxLaneLeanRoll = 12.0f;
+    [Tooltip("Maximum yaw angle (degrees) to turn slightly into lane changes.")]
+    [SerializeField] private float _maxLaneLeanYaw = 10.0f;
+    [Tooltip("Speed of lane lean interpolation.")]
+    [SerializeField] private float _laneLeanSpeed = 12.0f;
 
     [Header("Touch / Swipe Settings")]
     [Tooltip("Minimum drag distance in pixels to register a swipe.")]
     [SerializeField] private float _swipeThreshold = 40.0f;
+
+    // Animation state hashes
+    private static readonly int AnimStateIdle = Animator.StringToHash("Idle");
+    private static readonly int AnimStateRun = Animator.StringToHash("Run");
+    private static readonly int AnimStateJump = Animator.StringToHash("Jump");
+    private static readonly int AnimStateSlide = Animator.StringToHash("Slide");
+    private static readonly int AnimStateFall = Animator.StringToHash("Fall");
+    private static readonly int AnimStateStumble = Animator.StringToHash("Stumble");
 
     // Movement state
     private int _currentLane = 0; // -1: Left, 0: Mid, 1: Right
@@ -47,16 +77,22 @@ public class PlayerController : MonoBehaviour
     private Vector3 _trackLineAnchor = Vector3.zero;
     private float _distanceTraveled = 0f;
 
+    // Visual turn & lean interpolation
+    private float _visualTurnOffsetAngle = 0f;
+    private float _targetLeanRoll = 0f;
+    private float _targetLeanYaw = 0f;
+    private float _currentLeanRoll = 0f;
+    private float _currentLeanYaw = 0f;
+
     // Corner / Turn Zone state
     private CornerSegment _currentCorner;
 
     // Slide state
     private bool _isSliding = false;
     private float _slideTimer = 0f;
-    private float _standingColliderHeight = 2.0f;
-    private float _standingColliderCenterY = 1.0f;
-    private Vector3 _standingVisualScale = Vector3.one;
-    private Vector3 _standingVisualPosition = new Vector3(0f, 1.0f, 0f);
+
+    // Animation state tracking
+    private int _currentAnimState = 0;
 
     // Game state
     private bool _isDead = false;
@@ -84,8 +120,9 @@ public class PlayerController : MonoBehaviour
         _capsuleCollider = GetComponent<CapsuleCollider>();
         if (_capsuleCollider != null)
         {
-            _standingColliderHeight = _capsuleCollider.height;
-            _standingColliderCenterY = _capsuleCollider.center.y;
+            _capsuleCollider.height = _standingColliderHeight;
+            _capsuleCollider.center = new Vector3(0f, _standingColliderCenterY, 0f);
+            _capsuleCollider.radius = _colliderRadius;
         }
 
         var rb = GetComponent<Rigidbody>();
@@ -95,10 +132,35 @@ public class PlayerController : MonoBehaviour
             rb.useGravity = false;
         }
 
-        if (_visualModel != null)
+        if (_visualModel == null)
         {
-            _standingVisualScale = _visualModel.localScale;
-            _standingVisualPosition = _visualModel.localPosition;
+            var tenzin = transform.Find("Tenzin");
+            if (tenzin != null) _visualModel = tenzin;
+            else
+            {
+                var vis = transform.Find("Visual");
+                if (vis != null) _visualModel = vis;
+            }
+        }
+
+        if (_animator == null && _visualModel != null)
+        {
+            _animator = _visualModel.GetComponentInChildren<Animator>();
+        }
+        if (_animator == null)
+        {
+            _animator = GetComponentInChildren<Animator>();
+        }
+
+        if (_animator != null)
+        {
+            _animator.applyRootMotion = false;
+        }
+
+        var skirt = GetComponentInChildren<TenzinSkirtFollow>(true);
+        if (skirt != null)
+        {
+            skirt.enabled = true;
         }
 
         _groundY = transform.position.y;
@@ -107,19 +169,30 @@ public class PlayerController : MonoBehaviour
         _targetLateralOffset = _currentLane * _laneDistance;
     }
 
+    private void Start()
+    {
+        PlayAnimation(AnimStateIdle, 0f);
+    }
+
     private void Update()
     {
         if (_isDead)
         {
             // Continue falling physics if dead from falling off edge
             UpdateVerticalMovement();
+            UpdateVisualOrientation();
             return;
         }
 
         // 1. Wait for player input on Start Screen before running
         if (GameManager.Instance != null && !GameManager.Instance.IsStarted)
         {
+            if (_currentAnimState != AnimStateIdle)
+            {
+                PlayAnimation(AnimStateIdle, _animCrossFadeDuration);
+            }
             CheckStartInput();
+            UpdateVisualOrientation();
             return;
         }
 
@@ -129,12 +202,20 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        // If game has started and we are still in Idle, switch to Run
+        if (_currentAnimState == AnimStateIdle && _isGrounded)
+        {
+            PlayAnimation(AnimStateRun);
+        }
+
         CheckCornerEdge();
         HandleInput();
         UpdateSlide();
         UpdateVerticalMovement();
         UpdateHorizontalMovement();
         UpdateForwardMovement();
+        UpdateVisualOrientation();
+        UpdateAnimationSpeed();
         UpdateRunDust();
     }
 
@@ -146,6 +227,7 @@ public class PlayerController : MonoBehaviour
             if (keyboard.spaceKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame)
             {
                 GameManager.Instance.StartGame();
+                PlayAnimation(AnimStateRun);
                 return;
             }
         }
@@ -154,6 +236,7 @@ public class PlayerController : MonoBehaviour
         if (touch != null && touch.primaryTouch.press.wasPressedThisFrame)
         {
             GameManager.Instance.StartGame();
+            PlayAnimation(AnimStateRun);
             return;
         }
 
@@ -161,8 +244,50 @@ public class PlayerController : MonoBehaviour
         if (mouse != null && mouse.leftButton.wasPressedThisFrame)
         {
             GameManager.Instance.StartGame();
+            PlayAnimation(AnimStateRun);
             return;
         }
+    }
+
+    private void PlayAnimation(int stateHash, float crossFadeTime = -1f)
+    {
+        if (_animator == null) return;
+        if (_currentAnimState == stateHash) return;
+
+        _currentAnimState = stateHash;
+        float duration = crossFadeTime >= 0f ? crossFadeTime : _animCrossFadeDuration;
+        _animator.CrossFade(stateHash, duration);
+    }
+
+    private void UpdateAnimationSpeed()
+    {
+        if (_animator == null) return;
+
+        if (_currentAnimState == AnimStateRun)
+        {
+            float speed = GameManager.Instance != null ? GameManager.Instance.CurrentSpeed : 12.0f;
+            _animator.speed = Mathf.Max(0.1f, speed / _baseRunAnimSpeed);
+        }
+        else
+        {
+            _animator.speed = 1.0f;
+        }
+    }
+
+    private void UpdateVisualOrientation()
+    {
+        if (_visualModel == null) return;
+
+        // 1. Smooth turn toward new track direction
+        _visualTurnOffsetAngle = Mathf.MoveTowards(_visualTurnOffsetAngle, 0f, _turnSmoothSpeed * Time.deltaTime);
+        Quaternion turnRot = Quaternion.Euler(0f, _visualTurnOffsetAngle, 0f);
+
+        // 2. Lean into lane changes
+        _currentLeanRoll = Mathf.Lerp(_currentLeanRoll, _targetLeanRoll, _laneLeanSpeed * Time.deltaTime);
+        _currentLeanYaw = Mathf.Lerp(_currentLeanYaw, _targetLeanYaw, _laneLeanSpeed * Time.deltaTime);
+        Quaternion leanRot = Quaternion.Euler(0f, _currentLeanYaw, _currentLeanRoll);
+
+        _visualModel.localRotation = turnRot * leanRot;
     }
 
     private void UpdateRunDust()
@@ -324,6 +449,9 @@ public class PlayerController : MonoBehaviour
         _targetHeading = _targetHeading * Quaternion.Euler(0f, turnAngle, 0f);
         transform.rotation = _targetHeading;
 
+        // Smoothly rotate character body toward new heading
+        _visualTurnOffsetAngle -= turnAngle;
+
         Vector3 pivot = corner.PivotPosition;
         _trackLineAnchor = pivot;
 
@@ -361,6 +489,8 @@ public class PlayerController : MonoBehaviour
         _isGrounded = false;
         _verticalVelocity = -12f;
 
+        PlayAnimation(AnimStateFall);
+
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayCrashThud();
@@ -393,6 +523,8 @@ public class PlayerController : MonoBehaviour
         {
             _verticalVelocity = _jumpForce;
             _isGrounded = false;
+
+            PlayAnimation(AnimStateJump);
 
             if (AudioManager.Instance != null)
             {
@@ -429,13 +561,10 @@ public class PlayerController : MonoBehaviour
         {
             _capsuleCollider.height = _slidingColliderHeight;
             _capsuleCollider.center = new Vector3(0f, _slidingColliderCenterY, 0f);
+            _capsuleCollider.radius = _colliderRadius;
         }
 
-        if (_visualModel != null)
-        {
-            _visualModel.localScale = new Vector3(_standingVisualScale.x, _standingVisualScale.y * 0.4f, _standingVisualScale.z);
-            _visualModel.localPosition = new Vector3(0f, 0.4f, 0f);
-        }
+        PlayAnimation(AnimStateSlide);
     }
 
     private void StopSlide()
@@ -446,12 +575,12 @@ public class PlayerController : MonoBehaviour
         {
             _capsuleCollider.height = _standingColliderHeight;
             _capsuleCollider.center = new Vector3(0f, _standingColliderCenterY, 0f);
+            _capsuleCollider.radius = _colliderRadius;
         }
 
-        if (_visualModel != null)
+        if (_isGrounded && !_isDead)
         {
-            _visualModel.localScale = _standingVisualScale;
-            _visualModel.localPosition = _standingVisualPosition;
+            PlayAnimation(AnimStateRun);
         }
     }
 
@@ -482,6 +611,11 @@ public class PlayerController : MonoBehaviour
                 _verticalVelocity = 0f;
                 _isGrounded = true;
 
+                if (!_isSliding)
+                {
+                    PlayAnimation(AnimStateRun);
+                }
+
                 if (EffectsManager.Instance != null)
                 {
                     EffectsManager.Instance.EmitLandingDust(transform.position);
@@ -503,6 +637,14 @@ public class PlayerController : MonoBehaviour
         float currentLat = Vector3.Dot(toPlayer, RightDirection);
 
         float newLat = Mathf.MoveTowards(currentLat, _targetLateralOffset, _laneSwitchSpeed * Time.deltaTime);
+
+        // Calculate lateral velocity to drive lane change lean
+        float lateralDelta = newLat - currentLat;
+        float lateralSpeed = Time.deltaTime > 0f ? (lateralDelta / Time.deltaTime) : 0f;
+        float normalizedLateral = Mathf.Clamp(lateralSpeed / _laneSwitchSpeed, -1f, 1f);
+
+        _targetLeanRoll = -normalizedLateral * _maxLaneLeanRoll;
+        _targetLeanYaw = normalizedLateral * _maxLaneLeanYaw;
 
         Vector3 pos = _trackLineAnchor + ForwardDirection * currentForwardDist + RightDirection * newLat;
         pos.y = transform.position.y;
@@ -543,6 +685,8 @@ public class PlayerController : MonoBehaviour
         if (_isDead) return;
 
         _isDead = true;
+
+        PlayAnimation(AnimStateFall);
 
         if (AudioManager.Instance != null)
         {
