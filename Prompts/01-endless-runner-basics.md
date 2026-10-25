@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-25
 - **Tool:** Unity Assistant, Agent mode, Unity Default model
-- **Credits used:** _(fill in from the AI menu)_
+- **Credits used:** 74 (1,000 → 926)
 
 ## Prompt
 
@@ -34,4 +34,4 @@ What the Assistant created:
 
 Also: prefabs in `Assets/Prefabs/` (Player, Coin, three obstacle types, track segments), materials in `Assets/Materials/`, and the setup in `Assets/Scenes/SampleScene.unity`.
 
-**Testing notes:** _(what worked and what needed fixing after pressing Play)_
+**Testing notes:** Tested with ▶ Play: it worked. The capsule runs forward, switches lanes, jumps and slides; the track, obstacles, coins, UI and Game Over / Restart all work. No fixes needed.
