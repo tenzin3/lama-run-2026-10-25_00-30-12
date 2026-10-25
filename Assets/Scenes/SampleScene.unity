@@ -9764,6 +9764,8 @@ MonoBehaviour:
   _coinsText: {fileID: 1162648797}
   _speedText: {fileID: 1011245373}
   _pauseButton: {fileID: 2104776008}
+  _chaserHintPanel: {fileID: 0}
+  _chaserHintText: {fileID: 0}
   _pausePanel: {fileID: 4061971}
   _resumeButton: {fileID: 112491060}
   _pauseRestartButton: {fileID: 1707447261}
@@ -12658,6 +12660,63 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1001 &1808076367546923340
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353512674478578775, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1746614529919662340, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
+      propertyPath: m_Name
+      value: Chaser
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 78d4e1351dee7424f8a33be892cfc5f0, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -12673,3 +12732,4 @@ SceneRoots:
   - {fileID: 452757459}
   - {fileID: 1036045305}
   - {fileID: 1579845063}
+  - {fileID: 1808076367546923340}

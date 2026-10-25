@@ -12,6 +12,7 @@ Every prompt given to Unity Assistant, in order. Each file has the exact prompt,
 | 06 | [Tenzin character](06-tenzin-character.md) | The capsule is replaced by the 3D Tenzin with Idle, Run, Jump, Slide and Fall animations; collider and camera fitted to him |
 | 07 | [Track variety](07-track-variety.md) | Rope bridge, gap to jump, golden rooftop and gate arch to slide under, mixed into the track with spacing rules. 158 credits |
 | 08 | [Visual fixes](08-visual-fixes.md) | No more orange glow on Tenzin, grey square gone, round sparkles, camera closer so Tenzin is bigger on screen |
+| 09 | [The chase](09-the-chase.md) | A langur (from primitives) chases Tenzin; clipping obstacles makes him stumble, and a second stumble while it's close means it catches him. Chatter and screech sounds |
 
 ## Adding a prompt
 

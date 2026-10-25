@@ -12,6 +12,8 @@ public class AudioManager : MonoBehaviour
     private AudioClip _turnWhooshClip;
     private AudioClip _crashThudClip;
     private AudioClip _singingBowlClip;
+    private AudioClip _langurChatterClip;
+    private AudioClip _langurScreechClip;
 
     private AudioSource _sfxSource;
     private AudioSource _bellSource;
@@ -99,6 +101,18 @@ public class AudioManager : MonoBehaviour
         _bellSource.PlayOneShot(_singingBowlClip, 0.85f);
     }
 
+    public void PlayLangurChatter()
+    {
+        if (_isMuted || _langurChatterClip == null) return;
+        _sfxSource.PlayOneShot(_langurChatterClip, 0.8f);
+    }
+
+    public void PlayLangurScreech()
+    {
+        if (_isMuted || _langurScreechClip == null) return;
+        _sfxSource.PlayOneShot(_langurScreechClip, 1.0f);
+    }
+
     private void GenerateProceduralClips()
     {
         const int sampleRate = 44100;
@@ -109,6 +123,8 @@ public class AudioManager : MonoBehaviour
         _turnWhooshClip = GenerateTurnWhooshClip(sampleRate);
         _crashThudClip = GenerateCrashThudClip(sampleRate);
         _singingBowlClip = GenerateSingingBowlClip(sampleRate);
+        _langurChatterClip = GenerateLangurChatterClip(sampleRate);
+        _langurScreechClip = GenerateLangurScreechClip(sampleRate);
     }
 
     private AudioClip GenerateJumpClip(int sampleRate)
@@ -313,6 +329,92 @@ public class AudioManager : MonoBehaviour
         }
 
         AudioClip clip = AudioClip.Create("Procedural_SingingBowl", sampleCount, 1, sampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    private AudioClip GenerateLangurChatterClip(int sampleRate)
+    {
+        float duration = 0.22f;
+        int sampleCount = Mathf.FloorToInt(sampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        float phase1 = 0f;
+        float phase2 = 0f;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / sampleRate;
+            float sample = 0f;
+
+            // Chirp 1 (0.01s - 0.09s)
+            if (t >= 0.01f && t < 0.09f)
+            {
+                float u = (t - 0.01f) / 0.08f;
+                float freq = 1800f + 800f * Mathf.Sin(u * Mathf.PI);
+                phase1 += 2f * Mathf.PI * freq / sampleRate;
+
+                float fm = Mathf.Sin(2f * Mathf.PI * 35f * t) * 0.2f;
+                float env = Mathf.Sin(u * Mathf.PI);
+                sample += Mathf.Sin(phase1 + fm) * env * 0.7f;
+            }
+
+            // Chirp 2 (0.12s - 0.21s) - slightly higher pitch
+            if (t >= 0.12f && t < 0.21f)
+            {
+                float u = (t - 0.12f) / 0.09f;
+                float freq = 2100f + 950f * Mathf.Sin(u * Mathf.PI);
+                phase2 += 2f * Mathf.PI * freq / sampleRate;
+
+                float fm = Mathf.Sin(2f * Mathf.PI * 40f * t) * 0.25f;
+                float env = Mathf.Sin(u * Mathf.PI);
+                sample += Mathf.Sin(phase2 + fm) * env * 0.75f;
+            }
+
+            samples[i] = Mathf.Clamp(sample, -1f, 1f);
+        }
+
+        AudioClip clip = AudioClip.Create("Procedural_LangurChatter", sampleCount, 1, sampleRate, false);
+        clip.SetData(samples, 0);
+        return clip;
+    }
+
+    private AudioClip GenerateLangurScreechClip(int sampleRate)
+    {
+        float duration = 0.7f;
+        int sampleCount = Mathf.FloorToInt(sampleRate * duration);
+        float[] samples = new float[sampleCount];
+
+        float phase = 0f;
+        float noiseFilter = 0f;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float t = (float)i / sampleRate;
+            float normT = t / duration;
+
+            float freq = Mathf.Lerp(1200f, 3100f, Mathf.Pow(Mathf.Clamp01(normT * 2.5f), 0.5f));
+            if (normT > 0.4f)
+            {
+                freq -= (normT - 0.4f) * 1100f;
+            }
+
+            float fm1 = Mathf.Sin(2f * Mathf.PI * 22f * t) * 350f;
+            float fm2 = Mathf.Sin(2f * Mathf.PI * 180f * t) * 180f;
+            phase += 2f * Mathf.PI * (freq + fm1 + fm2) / sampleRate;
+
+            float white = Random.Range(-1f, 1f);
+            noiseFilter = Mathf.Lerp(noiseFilter, white, 0.45f);
+
+            float attack = Mathf.Clamp01(t / 0.04f);
+            float decay = Mathf.Exp(-Mathf.Max(0f, normT - 0.25f) * 4.5f);
+            float env = attack * decay;
+
+            float sample = (Mathf.Sin(phase) * 0.65f + noiseFilter * 0.35f) * env;
+            samples[i] = Mathf.Clamp(sample * 1.15f, -1f, 1f);
+        }
+
+        AudioClip clip = AudioClip.Create("Procedural_LangurScreech", sampleCount, 1, sampleRate, false);
         clip.SetData(samples, 0);
         return clip;
     }

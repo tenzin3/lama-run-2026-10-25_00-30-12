@@ -91,6 +91,12 @@ public class PlayerController : MonoBehaviour
     private bool _isSliding = false;
     private float _slideTimer = 0f;
 
+    // Stumble state
+    private float _stumbleTimer = 0f;
+    private float _stumbleSlowTimer = 0f;
+    private float _stumbleInvulnerabilityTimer = 0f;
+    private Obstacle _lastStumbledObstacle;
+
     // Animation state tracking
     private int _currentAnimState = 0;
 
@@ -206,6 +212,21 @@ public class PlayerController : MonoBehaviour
         if (_currentAnimState == AnimStateIdle && _isGrounded)
         {
             PlayAnimation(AnimStateRun);
+        }
+
+        // Stumble timer tick
+        if (_stumbleTimer > 0f)
+        {
+            _stumbleTimer -= Time.deltaTime;
+            if (_stumbleTimer <= 0f && !_isDead && _isGrounded)
+            {
+                PlayAnimation(AnimStateRun);
+            }
+        }
+
+        if (_stumbleInvulnerabilityTimer > 0f)
+        {
+            _stumbleInvulnerabilityTimer -= Time.deltaTime;
         }
 
         CheckCornerEdge();
@@ -519,6 +540,8 @@ public class PlayerController : MonoBehaviour
 
     public void Jump()
     {
+        if (_stumbleTimer > 0f) return;
+
         if (_isGrounded && !_isSliding)
         {
             _verticalVelocity = _jumpForce;
@@ -535,6 +558,8 @@ public class PlayerController : MonoBehaviour
 
     public void Slide()
     {
+        if (_stumbleTimer > 0f) return;
+
         if (!_isGrounded)
         {
             // Fast fall mid-air
@@ -659,6 +684,12 @@ public class PlayerController : MonoBehaviour
             speed = GameManager.Instance.CurrentSpeed;
         }
 
+        if (_stumbleSlowTimer > 0f)
+        {
+            _stumbleSlowTimer -= Time.deltaTime;
+            speed *= 0.7f;
+        }
+
         float deltaDist = speed * Time.deltaTime;
         _distanceTraveled += deltaDist;
         transform.position += ForwardDirection * deltaDist;
@@ -684,6 +715,120 @@ public class PlayerController : MonoBehaviour
     {
         if (_isDead) return;
 
+        if (_stumbleInvulnerabilityTimer > 0f && _lastStumbledObstacle == obstacle)
+        {
+            return;
+        }
+
+        bool isStumble = CheckIsStumbleHit(obstacle);
+
+        if (isStumble)
+        {
+            if (LangurChaser.Instance != null && LangurChaser.Instance.IsClose)
+            {
+                DieByLangurCatch();
+            }
+            else
+            {
+                TriggerStumble(obstacle);
+            }
+        }
+        else
+        {
+            DieHeadOn();
+        }
+    }
+
+    private bool CheckIsStumbleHit(Obstacle obstacle)
+    {
+        if (obstacle == null) return false;
+
+        // 1. Hits a low barrier while already in the air descending
+        if (obstacle.Type == ObstacleType.LowBarrier && !_isGrounded && _verticalVelocity < -0.1f)
+        {
+            return true;
+        }
+
+        // 2. Clips the side of an obstacle while changing lanes
+        Vector3 toPlayer = transform.position - _trackLineAnchor;
+        float currentLat = Vector3.Dot(toPlayer, RightDirection);
+        bool isChangingLanes = Mathf.Abs(currentLat - _targetLateralOffset) > 0.1f;
+
+        if (isChangingLanes && obstacle.Type != ObstacleType.HighBeam)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void TriggerStumble(Obstacle obstacle)
+    {
+        _lastStumbledObstacle = obstacle;
+        _stumbleInvulnerabilityTimer = 0.65f;
+        _stumbleTimer = 0.55f;
+        _stumbleSlowTimer = 0.5f;
+
+        // Stop slide if sliding
+        if (_isSliding)
+        {
+            StopSlide();
+        }
+
+        // Disable colliders on this obstacle so player passes through cleanly
+        if (obstacle != null)
+        {
+            var colliders = obstacle.GetComponentsInChildren<Collider>();
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                colliders[i].enabled = false;
+            }
+        }
+
+        PlayAnimation(AnimStateStumble, 0.06f);
+
+        if (FollowCamera.Instance != null)
+        {
+            FollowCamera.Instance.TriggerShake(0.25f, 0.2f);
+        }
+
+        if (LangurChaser.Instance != null)
+        {
+            LangurChaser.Instance.OnPlayerStumbled();
+        }
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowLangurHint();
+        }
+    }
+
+    private void DieByLangurCatch()
+    {
+        if (_isDead) return;
+        _isDead = true;
+
+        PlayAnimation(AnimStateFall, 0.1f);
+
+        if (FollowCamera.Instance != null)
+        {
+            FollowCamera.Instance.TriggerShake(0.45f, 0.5f);
+        }
+
+        if (LangurChaser.Instance != null)
+        {
+            LangurChaser.Instance.TriggerCatch();
+        }
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.GameOver();
+        }
+    }
+
+    private void DieHeadOn()
+    {
+        if (_isDead) return;
         _isDead = true;
 
         PlayAnimation(AnimStateFall);
