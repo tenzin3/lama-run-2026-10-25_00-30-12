@@ -12,9 +12,21 @@ A Temple Run–style endless runner starring Tenzin, a young monk, built in Unit
 
 ### Progress
 
-| 01 · Basics | 03 · Monastery look | 04 · Game feel | 05 · Sparkle and sky fix | 06 · Tenzin | 07 · Variety | 08 · Visual fixes |
-|---|---|---|---|---|---|---|
-| <img src="Screenshots/01-endless-runner-basics.png" width="120" alt="Grey prototype"> | <img src="Screenshots/03-monastery-look.png" width="120" alt="Monastery look"> | <img src="Screenshots/04-game-feel.png" width="120" alt="Game feel"> | <img src="Screenshots/05-fix-sparkle-and-sky.png" width="120" alt="Sparkle and sky fix"> | <img src="Screenshots/06-tenzin-character.png" width="120" alt="Tenzin character"> | <img src="Screenshots/07-track-variety.png" width="120" alt="Track variety"> | <img src="Screenshots/08-visual-fixes.png" width="120" alt="Visual fixes"> |
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="Screenshots/01-endless-runner-basics.png" width="280" alt="Grey prototype"><br><sub>01 · Basics</sub></td>
+    <td align="center" width="33%"><img src="Screenshots/03-monastery-look.png" width="280" alt="Monastery look"><br><sub>03 · Monastery look</sub></td>
+    <td align="center" width="33%"><img src="Screenshots/04-game-feel.png" width="280" alt="Game feel"><br><sub>04 · Game feel</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><img src="Screenshots/05-fix-sparkle-and-sky.png" width="280" alt="Sparkle and sky fix"><br><sub>05 · Sparkle and sky fix</sub></td>
+    <td align="center" width="33%"><img src="Screenshots/06-tenzin-character.png" width="280" alt="Tenzin character"><br><sub>06 · Tenzin</sub></td>
+    <td align="center" width="33%"><img src="Screenshots/07-track-variety.png" width="280" alt="Track variety"><br><sub>07 · Variety</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><img src="Screenshots/08-visual-fixes.png" width="280" alt="Visual fixes"><br><sub>08 · Visual fixes</sub></td>
+  </tr>
+</table>
 
 Every screenshot is kept in [`Screenshots/`](Screenshots/).
 
