@@ -2,7 +2,7 @@
 
 - **Date:** 2026-10-25
 - **Tool:** Unity Assistant, Agent mode, Unity Default model
-- **Credits used:** 74 (1,000 → 926)
+- **Credits used:** 86 (74 to build it, 12 more on the Assistant's own Play-mode checks, which ran for about 23 minutes until stopped)
 
 ## Prompt
 
