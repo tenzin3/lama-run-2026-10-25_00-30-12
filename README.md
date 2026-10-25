@@ -6,9 +6,17 @@ A Temple Run–style endless runner starring Tenzin, a young monk, built in Unit
 
 ## How it looks
 
-![Tenzin Run prototype: a blue capsule runs down a grey rooftop path between lane-blocking boxes and lines of gold coins; the HUD shows 72 m, 14 coins and 12.9 m/s](Screenshots/01-endless-runner-basics.png)
+![Tenzin Run after prompt 03: an orange capsule runs down a stone path with rope rails, under prayer flags, past whitewashed monastery buildings with maroon bands and golden roofs, collecting butter lamps](Screenshots/03-monastery-look.png)
 
-*Prototype after [prompt 01](Prompts/01-endless-runner-basics.md), 25 Oct 2026: a capsule stands in for Tenzin. Every screenshot is kept in [`Screenshots/`](Screenshots/).*
+*Latest: after [prompt 03](Prompts/03-monastery-look.md), 25 Oct 2026. A capsule still stands in for Tenzin.*
+
+### Progress
+
+| After prompt 01: basics | After prompt 03: monastery look |
+|---|---|
+| ![Grey prototype](Screenshots/01-endless-runner-basics.png) | ![Monastery look](Screenshots/03-monastery-look.png) |
+
+Every screenshot is kept in [`Screenshots/`](Screenshots/).
 
 ## Controls
 

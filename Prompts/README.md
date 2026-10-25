@@ -6,6 +6,7 @@ Every prompt given to Unity Assistant, in order. Each file has the exact prompt,
 |---|---|---|
 | 01 | [Endless runner basics](01-endless-runner-basics.md) | Capsule player, endless track, obstacles, coins, UI, camera |
 | 02 | [Turns](02-turns.md) | 90° left/right corners, turn input, run-off-edge Game Over, camera follows turns |
+| 03 | [Monastery look](03-monastery-look.md) | Stone path, rope rails, prayer flags, monastery buildings, butter lamps, sky, clouds, mountains |
 
 ## Adding a prompt
 
