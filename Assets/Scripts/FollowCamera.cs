@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class FollowCamera : MonoBehaviour
 {
+    public static FollowCamera Instance { get; private set; }
+
     [Header("Target & Offset")]
     [SerializeField] private Transform _target;
     [SerializeField] private Vector3 _offset = new Vector3(0f, 3.8f, -5.5f);
@@ -15,10 +17,21 @@ public class FollowCamera : MonoBehaviour
     [Header("Rotation")]
     [SerializeField] private float _pitchAngle = 18f;
 
+    [Header("Dynamic FOV")]
+    [SerializeField] private float _baseFOV = 60f;
+    [SerializeField] private float _maxFOV = 69f;
+    [SerializeField] private float _fovLerpSpeed = 3f;
+
     private float _currentYaw;
     private float _yawVelocity;
     private float _currentY;
     private PlayerController _playerController;
+    private Camera _cameraComponent;
+
+    // Shake state
+    private float _shakeTimer = 0f;
+    private float _shakeDuration = 0f;
+    private float _shakeMagnitude = 0f;
 
     public Transform Target
     {
@@ -30,6 +43,16 @@ public class FollowCamera : MonoBehaviour
             {
                 _playerController = _target.GetComponent<PlayerController>();
             }
+        }
+    }
+
+    private void Awake()
+    {
+        Instance = this;
+        _cameraComponent = GetComponent<Camera>();
+        if (_cameraComponent != null)
+        {
+            _cameraComponent.fieldOfView = _baseFOV;
         }
     }
 
@@ -57,8 +80,23 @@ public class FollowCamera : MonoBehaviour
         }
     }
 
+    public void TriggerShake(float duration = 0.35f, float magnitude = 0.35f)
+    {
+        _shakeDuration = duration;
+        _shakeTimer = duration;
+        _shakeMagnitude = magnitude;
+    }
+
     private void LateUpdate()
     {
+        // 1. Dynamic FOV with speed
+        if (_cameraComponent != null && GameManager.Instance != null)
+        {
+            float speedRatio = Mathf.InverseLerp(GameManager.Instance.StartSpeed, GameManager.Instance.MaxSpeed, GameManager.Instance.CurrentSpeed);
+            float targetFOV = Mathf.Lerp(_baseFOV, _maxFOV, speedRatio);
+            _cameraComponent.fieldOfView = Mathf.Lerp(_cameraComponent.fieldOfView, targetFOV, _fovLerpSpeed * Time.deltaTime);
+        }
+
         if (_target == null) return;
 
         float targetYaw = _playerController != null ? _playerController.TargetYaw : _target.eulerAngles.y;
@@ -76,6 +114,21 @@ public class FollowCamera : MonoBehaviour
 
         Vector3 camPos = _target.position + rotatedOffset;
         camPos.y = _currentY + _offset.y;
+
+        // Camera Shake offset
+        if (_shakeTimer > 0f)
+        {
+            _shakeTimer -= Time.unscaledDeltaTime;
+            float progress = Mathf.Clamp01(_shakeTimer / Mathf.Max(0.001f, _shakeDuration));
+            float currentMag = _shakeMagnitude * progress;
+            Vector3 shakeOffset = new Vector3(
+                Random.Range(-1f, 1f) * currentMag,
+                Random.Range(-0.8f, 0.8f) * currentMag,
+                Random.Range(-0.5f, 0.5f) * currentMag
+            );
+            camPos += shakeOffset;
+        }
+
         transform.position = camPos;
     }
 }

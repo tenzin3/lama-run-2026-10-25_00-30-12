@@ -19,10 +19,22 @@ public class Coin : MonoBehaviour
         if (other.GetComponent<PlayerController>() != null)
         {
             _collected = true;
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayLampPickup();
+            }
+
+            if (EffectsManager.Instance != null)
+            {
+                EffectsManager.Instance.EmitLampSparkle(transform.position);
+            }
+
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.AddCoins(_value);
             }
+
             gameObject.SetActive(false);
         }
     }

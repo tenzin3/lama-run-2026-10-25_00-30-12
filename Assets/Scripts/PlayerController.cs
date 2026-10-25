@@ -60,6 +60,7 @@ public class PlayerController : MonoBehaviour
 
     // Game state
     private bool _isDead = false;
+    private float _runDustTimer = 0f;
 
     // Swipe input tracking
     private Vector2 _touchStartPos;
@@ -115,12 +116,68 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        // 1. Wait for player input on Start Screen before running
+        if (GameManager.Instance != null && !GameManager.Instance.IsStarted)
+        {
+            CheckStartInput();
+            return;
+        }
+
+        // 2. Pause check
+        if (GameManager.Instance != null && !GameManager.Instance.IsPlaying)
+        {
+            return;
+        }
+
         CheckCornerEdge();
         HandleInput();
         UpdateSlide();
         UpdateVerticalMovement();
         UpdateHorizontalMovement();
         UpdateForwardMovement();
+        UpdateRunDust();
+    }
+
+    private void CheckStartInput()
+    {
+        var keyboard = Keyboard.current;
+        if (keyboard != null)
+        {
+            if (keyboard.spaceKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame)
+            {
+                GameManager.Instance.StartGame();
+                return;
+            }
+        }
+
+        var touch = Touchscreen.current;
+        if (touch != null && touch.primaryTouch.press.wasPressedThisFrame)
+        {
+            GameManager.Instance.StartGame();
+            return;
+        }
+
+        var mouse = Mouse.current;
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame)
+        {
+            GameManager.Instance.StartGame();
+            return;
+        }
+    }
+
+    private void UpdateRunDust()
+    {
+        if (!_isGrounded || _isSliding || _isDead) return;
+
+        _runDustTimer -= Time.deltaTime;
+        if (_runDustTimer <= 0f)
+        {
+            _runDustTimer = 0.12f;
+            if (EffectsManager.Instance != null)
+            {
+                EffectsManager.Instance.EmitRunDust(transform.position, ForwardDirection);
+            }
+        }
     }
 
     private void CheckCornerEdge()
@@ -257,6 +314,11 @@ public class PlayerController : MonoBehaviour
     {
         corner.OnTurnSuccess();
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayTurnWhoosh();
+        }
+
         Vector3 oldForward = ForwardDirection;
         float turnAngle = corner.Direction == TurnDirection.Right ? 90f : -90f;
         _targetHeading = _targetHeading * Quaternion.Euler(0f, turnAngle, 0f);
@@ -299,6 +361,16 @@ public class PlayerController : MonoBehaviour
         _isGrounded = false;
         _verticalVelocity = -12f;
 
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCrashThud();
+        }
+
+        if (FollowCamera.Instance != null)
+        {
+            FollowCamera.Instance.TriggerShake(0.4f, 0.5f);
+        }
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.GameOver();
@@ -321,6 +393,11 @@ public class PlayerController : MonoBehaviour
         {
             _verticalVelocity = _jumpForce;
             _isGrounded = false;
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayJump();
+            }
         }
     }
 
@@ -335,6 +412,11 @@ public class PlayerController : MonoBehaviour
         if (!_isSliding)
         {
             StartSlide();
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySlide();
+            }
         }
     }
 
@@ -399,6 +481,11 @@ public class PlayerController : MonoBehaviour
                 pos.y = _groundY;
                 _verticalVelocity = 0f;
                 _isGrounded = true;
+
+                if (EffectsManager.Instance != null)
+                {
+                    EffectsManager.Instance.EmitLandingDust(transform.position);
+                }
             }
         }
         else
@@ -456,6 +543,16 @@ public class PlayerController : MonoBehaviour
         if (_isDead) return;
 
         _isDead = true;
+
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayCrashThud();
+        }
+
+        if (FollowCamera.Instance != null)
+        {
+            FollowCamera.Instance.TriggerShake(0.35f, 0.45f);
+        }
 
         if (GameManager.Instance != null)
         {
