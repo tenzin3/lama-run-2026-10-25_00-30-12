@@ -67,4 +67,6 @@ Tenzin is a character from animations by **Arkizen Studio**: https://www.instagr
 
 The in-game 3D model of Tenzin was generated with an AI 3D-character tool from reference images taken from Arkizen Studio's animation; see [Prompts/06](Prompts/06-tenzin-character.md).
 
+Tenzin's **Run, Slide, Jump and Meditate** animations are motion-captured animations from **[Mixamo](https://www.mixamo.com)** (Adobe): *Running*, *Running Slide*, *Running Jump* and *Sitting Idle*, retargeted onto the Tenzin model with Unity's Humanoid rig. See [Prompts/12](Prompts/12-mixamo-run.md) and [Prompts/13](Prompts/13-meditation-flight.md). His Idle, Stumble and Fall animations came with the AI-generated character.
+
 The earlier browser versions of the game are at https://github.com/tenzin3/tenzin-game
