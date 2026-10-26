@@ -4,6 +4,12 @@ A Temple Run–style endless runner starring Tenzin, a young monk, built in Unit
 
 **Status:** early prototype. Tenzin is now a rigged 3D character with run, jump, slide and fall animations.
 
+## ▶ Play now
+
+**https://tenzin3.github.io/lama-run-2026-10-25_00-30-12/**
+
+Plays right in your web browser, on a computer or a phone, with nothing to install. Tap or press Space to start; swipe (or use the arrow keys / A, D, W, S) to change lanes, jump and slide. The first load downloads the game (about 10–15 MB), so give it a few seconds.
+
 ## How it looks
 
 ![Tenzin Run after prompt 10: the start screen under a clear blue morning sky, with white monastery buildings with maroon bands, prayer flags, bright snow, and Tenzin casting a sharp shadow on the stone path](Screenshots/10-visual-polish.png)
@@ -46,6 +52,10 @@ Every screenshot is kept in [`Screenshots/`](Screenshots/).
 ## Opening the project
 
 Open this folder in Unity Hub with Unity 6000.6, open `Assets/Scenes/SampleScene.unity`, and press ▶ Play.
+
+## Web version
+
+The playable web build lives in [`docs/`](docs/) and is served by GitHub Pages (**Settings → Pages**: `main` branch, `/docs` folder). To update it: in Unity, **File → Build Profiles → Web → Build**, choose the `docs` folder (replace its contents), then commit and push. Compression is set to **Disabled** in Publishing Settings, because GitHub Pages can't serve Unity's compressed files without extra setup. Files in `docs/` are kept out of Git LFS (see `.gitattributes`), because GitHub Pages can't serve LFS files.
 
 ## How it's being built
 
