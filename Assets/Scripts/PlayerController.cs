@@ -414,9 +414,10 @@ public class PlayerController : MonoBehaviour
 
     private void CheckCornerEdge()
     {
-        // While flying, Tenzin is above the corner trigger boxes, so find the corner by position.
-        if (_meditationFlight != null && _meditationFlight.IsFlying &&
-            (_currentCorner == null || _currentCorner.HasTurned))
+        // While flying (and during the protected second after landing), corners are turned
+        // automatically. Tenzin may be above the corner trigger boxes, so find the corner by position.
+        bool flightProtected = _meditationFlight != null && (_meditationFlight.IsFlying || _meditationFlight.IsInvincible);
+        if (flightProtected && (_currentCorner == null || _currentCorner.HasTurned))
         {
             var corners = CornerSegment.Active;
             for (int i = 0; i < corners.Count; i++)
@@ -432,7 +433,7 @@ public class PlayerController : MonoBehaviour
 
         if (_currentCorner != null && !_currentCorner.HasTurned)
         {
-            if (_meditationFlight != null && _meditationFlight.IsFlying)
+            if (flightProtected)
             {
                 // Auto-turn when reaching or entering corner pivot area
                 Vector3 fromPivot = transform.position - _currentCorner.PivotPosition;
@@ -737,6 +738,9 @@ public class PlayerController : MonoBehaviour
     {
         if (_currentCorner == corner)
         {
+            // If he left the turn area without turning, keep watching this corner so that
+            // running past its edge still ends the run (instead of running on forever).
+            if (!corner.HasTurned) return;
             _currentCorner = null;
         }
     }

@@ -25,4 +25,14 @@ In the browser (phone), the Meditation Flight effects showed as **magenta square
 | **Camera lag and lean** | `FollowCamera.cs` | Camera trails sideways movement slightly (up to 0.9 m, 0.18 s) and leans into it (roll 3.5°, yaw 2.5°), so movement feels alive instead of locked. All values editable on Main Camera |
 | Hint text on phones | `UIManager.cs` | "Tilt to move · Swipe to turn · Swipe up to jump · Swipe down to slide" |
 
-**Testing notes:** camera lag/lean and jump-from-slide tested in the editor and liked. Tilt still to test on phones (iPhone Safari may need a motion-permission prompt; Android Chrome should work directly).
+## Part 3: endless run after a flight
+
+**Bug (found on a phone):** right after a Meditation Flight landed, a corner came up; the turn wasn't taken in time, and Tenzin kept running straight into the clouds forever with no Game Over.
+
+**Cause:** for 1 second after landing he is protected, and the "ran off the edge" check was ignored while protected. After that, nothing caught him: the corner stopped tracking him once he left its turn area, and the edge trigger only fires once.
+
+**Fix (`PlayerController.cs`):**
+- Corners are now turned automatically during the protected second after landing too, not only while flying.
+- If he leaves a corner's turn area without turning, the corner keeps tracking him, so running past its edge still ends the run once he's no longer protected.
+
+**Testing notes:** tilt works on an Android phone. Camera lag/lean and jump-from-slide tested in the editor and liked. Tilt still to test on phones (iPhone Safari may need a motion-permission prompt; Android Chrome should work directly).
