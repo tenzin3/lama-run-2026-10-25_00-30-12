@@ -125,7 +125,10 @@ public class AudioManager : MonoBehaviour
 
     private void GenerateProceduralClips()
     {
-        if (s_clipsGenerated)
+        // Domain reload is disabled in this project, so static fields survive between
+        // Play sessions while runtime-created AudioClips are destroyed when Play stops.
+        // Only reuse the cache if the clips still exist.
+        if (s_clipsGenerated && s_jumpClip != null && s_langurScreechClip != null)
         {
             _jumpClip = s_jumpClip;
             _slideClip = s_slideClip;

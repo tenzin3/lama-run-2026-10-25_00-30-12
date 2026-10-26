@@ -1802,6 +1802,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 281866651}
+  - component: {fileID: 281866652}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
@@ -1831,6 +1832,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &281866652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 281866650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a15c53b34bce54848b77a49e2f9cc619, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SafeArea
 --- !u!1 &288763867
 GameObject:
   m_ObjectHideFlags: 0
@@ -2114,6 +2127,8 @@ MonoBehaviour:
   _baseFOV: 60
   _maxFOV: 69
   _fovLerpSpeed: 3
+  _portraitBaseFOV: 82
+  _portraitMaxFOV: 92
 --- !u!1 &359022513
 GameObject:
   m_ObjectHideFlags: 0
@@ -9764,6 +9779,9 @@ MonoBehaviour:
   _coinsText: {fileID: 1162648797}
   _speedText: {fileID: 1011245373}
   _pauseButton: {fileID: 2104776008}
+  _hudMuteButton: {fileID: 0}
+  _hudMuteText: {fileID: 0}
+  _controlsHintText: {fileID: 0}
   _chaserHintPanel: {fileID: 0}
   _chaserHintText: {fileID: 0}
   _pausePanel: {fileID: 4061971}
