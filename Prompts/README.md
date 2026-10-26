@@ -17,6 +17,7 @@ Every prompt given to Unity Assistant, in order. Each file has the exact prompt,
 | 11 | [Phone and web (scripts)](11-phone-and-web.md) | Touch swipes, nearest-4 lamp lights, safe-area script, portrait camera, clean-up. Stopped before the scene wiring (still to do by hand). 229 credits |
 | 12 | [Natural running animation](12-mixamo-run.md) | Done by hand, 0 credits: Mixamo motion-captured Running, Running Slide and Running Jump replace the robotic animations; Tenzin's avatar set to a proper T-pose to fix arms held behind him |
 | 13 | [Meditation Flight power-up](13-meditation-flight.md) | Lamps earn a flight (200, 500, 900…): Tenzin meditates in the air, glowing, with light streaks; gold meter. 259 credits plus free fixes by Claude (corners while flying, meter, effects) |
+| 14 | [Web effect fixes and controls](14-web-fixes-and-controls.md) | Done by Claude, 0 credits: effects fixed for the web build (shader included, emission kept, template materials), tilt to move, jump from slide, camera lag and lean |
 
 ## Adding a prompt
 

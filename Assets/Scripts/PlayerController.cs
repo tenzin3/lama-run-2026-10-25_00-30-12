@@ -72,6 +72,20 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private MeditationFlight _meditationFlight;
 
     // Movement state
+    [Header("Tilt Controls (phones)")]
+    [Tooltip("On phones, tilting moves Tenzin smoothly across the path (Temple Run style). Swipes still turn, jump and slide.")]
+    [SerializeField] private bool _tiltControls = true;
+    [Tooltip("Degrees of sideways tilt that move Tenzin all the way to the edge lane.")]
+    [SerializeField] private float _tiltFullAngle = 22f;
+    [Tooltip("Small tilts below this many degrees are ignored, so he stays centred when the phone is held level.")]
+    [SerializeField] private float _tiltDeadZone = 2.5f;
+    [Tooltip("How quickly he follows the tilt (higher = snappier).")]
+    [SerializeField] private float _tiltResponsiveness = 10f;
+    [Tooltip("Flip the tilt direction if left and right feel reversed.")]
+    [SerializeField] private bool _invertTilt = false;
+    private bool _tiltActive;
+    private float _tiltValue;
+
     private int _currentLane = 0; // -1: Left, 0: Mid, 1: Right
     private float _targetLateralOffset = 0f;
     private float _verticalVelocity = 0f;
@@ -127,6 +141,8 @@ public class PlayerController : MonoBehaviour
     public float TargetYaw => _targetHeading.eulerAngles.y;
     public Vector3 ForwardDirection => _targetHeading * Vector3.forward;
     public Vector3 RightDirection => _targetHeading * Vector3.right;
+    public float LateralOffset => Vector3.Dot(transform.position - _trackLineAnchor, RightDirection);
+    public bool TiltActive => _tiltActive;
     public bool IsInTurnZone => _currentCorner != null && !_currentCorner.HasTurned && _currentCorner.IsPlayerInTurnZone(transform.position);
 
     public void PlayMeditateAnimation(float crossFade = 0.2f)
@@ -435,8 +451,44 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // Reads the phone's accelerometer and moves Tenzin smoothly across the path.
+    // Only active when the device actually sends motion data (phones); on computers,
+    // or if a browser hasn't allowed motion access, swipes/keys change lanes as before.
+    private void UpdateTilt()
+    {
+        _tiltActive = false;
+        if (!_tiltControls || _isDead) return;
+
+        var acc = Accelerometer.current;
+        if (acc == null) return;
+        if (!acc.enabled)
+        {
+            InputSystem.EnableDevice(acc);
+            return;
+        }
+
+        Vector3 a = acc.acceleration.ReadValue();
+        if (a.sqrMagnitude < 0.01f) return; // no motion data yet
+
+        // Portrait: sideways tilt is the device's x axis. Landscape: its y axis.
+        float lateral = Screen.width > Screen.height ? -a.y : a.x;
+        float angle = Mathf.Asin(Mathf.Clamp(lateral, -1f, 1f)) * Mathf.Rad2Deg;
+        float beyondDeadZone = Mathf.Max(0f, Mathf.Abs(angle) - _tiltDeadZone);
+        float target = Mathf.Clamp(Mathf.Sign(angle) * beyondDeadZone / Mathf.Max(1f, _tiltFullAngle - _tiltDeadZone), -1f, 1f);
+        if (_invertTilt) target = -target;
+
+        _tiltValue = Mathf.Lerp(_tiltValue, target, 1f - Mathf.Exp(-_tiltResponsiveness * Time.deltaTime));
+        _tiltActive = true;
+
+        _targetLateralOffset = _tiltValue * _laneDistance;
+        _currentLane = Mathf.Clamp(Mathf.RoundToInt(_tiltValue), -1, 1);
+    }
+
     private void HandleInput()
     {
+        // 0. Phone tilt (smooth sideways movement)
+        UpdateTilt();
+
         // 1. Keyboard Input (New Input System)
         var keyboard = Keyboard.current;
         if (keyboard != null)
@@ -622,7 +674,7 @@ public class PlayerController : MonoBehaviour
 
             AttemptTurn(dir);
         }
-        else
+        else if (!_tiltActive) // with tilt, sideways movement comes from tilting; swipes only turn
         {
             ChangeLane((int)dir);
         }
@@ -729,6 +781,12 @@ public class PlayerController : MonoBehaviour
     public void Jump()
     {
         if (_stumbleTimer > 0f) return;
+
+        // Jumping mid-slide cancels the slide (stand up and jump straight away), like Temple Run.
+        if (_isGrounded && _isSliding)
+        {
+            StopSlide();
+        }
 
         if (_isGrounded && !_isSliding)
         {

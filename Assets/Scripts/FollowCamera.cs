@@ -26,6 +26,23 @@ public class FollowCamera : MonoBehaviour
     [Tooltip("Target max FOV in portrait mode at top running speed.")]
     [SerializeField] private float _portraitMaxFOV = 92f;
 
+    [Header("Sideways Follow (lag and lean)")]
+    [Tooltip("How long the camera takes to catch up with sideways movement (seconds). 0 = locked to Tenzin.")]
+    [SerializeField] private float _lateralSmoothTime = 0.18f;
+    [Tooltip("Maximum distance (m) the camera can trail behind his sideways movement.")]
+    [SerializeField] private float _maxLateralLag = 0.9f;
+    [Tooltip("Degrees the camera rolls into sideways movement.")]
+    [SerializeField] private float _maxLeanRoll = 3.5f;
+    [Tooltip("Degrees the camera turns toward sideways movement.")]
+    [SerializeField] private float _maxLeanYaw = 2.5f;
+    [Tooltip("How quickly the lean follows the movement.")]
+    [SerializeField] private float _leanSmoothTime = 0.15f;
+    private float _smoothLateral;
+    private float _smoothLateralVel;
+    private bool _lateralInit;
+    private float _leanAmount;
+    private float _leanVel;
+
     private float _currentYaw;
     private float _yawVelocity;
     private float _currentY;
@@ -119,8 +136,28 @@ public class FollowCamera : MonoBehaviour
         float targetYaw = _playerController != null ? _playerController.TargetYaw : _target.eulerAngles.y;
         _currentYaw = Mathf.SmoothDampAngle(_currentYaw, targetYaw, ref _yawVelocity, _rotationSmoothTime);
 
-        // Update rotation
-        transform.rotation = Quaternion.Euler(_pitchAngle, _currentYaw, 0f);
+        // Sideways lag: the camera trails slightly behind Tenzin's sideways movement,
+        // then catches up, so lane changes and tilting feel like motion instead of a locked camera.
+        float lateralLag = 0f;
+        float targetLean = 0f;
+        if (_playerController != null && Time.deltaTime > 0f)
+        {
+            float lat = _playerController.LateralOffset;
+            if (!_lateralInit || _lateralSmoothTime <= 0f)
+            {
+                _smoothLateral = lat;
+                _smoothLateralVel = 0f;
+                _lateralInit = true;
+            }
+            _smoothLateral = Mathf.SmoothDamp(_smoothLateral, lat, ref _smoothLateralVel, Mathf.Max(0.0001f, _lateralSmoothTime));
+            lateralLag = Mathf.Clamp(_smoothLateral - lat, -_maxLateralLag, _maxLateralLag);
+            // Lean in the direction he is moving (normalised by roughly one lane per 0.3 s).
+            targetLean = Mathf.Clamp(_smoothLateralVel / 7f, -1f, 1f);
+        }
+        _leanAmount = Mathf.SmoothDamp(_leanAmount, targetLean, ref _leanVel, Mathf.Max(0.0001f, _leanSmoothTime));
+
+        // Update rotation (with lean)
+        transform.rotation = Quaternion.Euler(_pitchAngle, _currentYaw + _leanAmount * _maxLeanYaw, -_leanAmount * _maxLeanRoll);
 
         // Smoothly interpolate Y for gentle reaction to jumps
         _currentY = Mathf.Lerp(_currentY, _target.position.y, _ySmoothSpeed * Time.deltaTime);
@@ -129,7 +166,8 @@ public class FollowCamera : MonoBehaviour
         Quaternion yawOnly = Quaternion.Euler(0f, _currentYaw, 0f);
         Vector3 rotatedOffset = yawOnly * new Vector3(_offset.x, 0f, _offset.z);
 
-        Vector3 camPos = _target.position + rotatedOffset;
+        Vector3 sideways = yawOnly * Vector3.right;
+        Vector3 camPos = _target.position + rotatedOffset + sideways * lateralLag;
         camPos.y = _currentY + _offset.y;
 
         // Camera Shake offset
