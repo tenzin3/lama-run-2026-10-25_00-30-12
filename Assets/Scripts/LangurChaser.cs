@@ -184,6 +184,15 @@ public class LangurChaser : MonoBehaviour
 
         if (!gameIsRunning) return;
 
+        // While meditation flight is active, keep the chaser far behind out of view
+        if (MeditationFlight.Instance != null && MeditationFlight.Instance.IsFlying)
+        {
+            _isClose = false;
+            _targetDistanceBehind = _fallbackDistance + 6.0f;
+            _currentDistanceBehind = Mathf.MoveTowards(_currentDistanceBehind, _targetDistanceBehind, _catchUpSpeed * Time.deltaTime);
+            return;
+        }
+
         // 1. Initial 4-second burst sequence
         if (_startFallbackTimer < _startFallbackDuration)
         {
@@ -300,6 +309,19 @@ public class LangurChaser : MonoBehaviour
                 AudioManager.Instance.PlayLangurChatter();
             }
         }
+    }
+
+    /// <summary>
+    /// Drops the langur back out of view during meditation flight.
+    /// </summary>
+    public void DropBackOutOfView(float extraDistance = 6.0f)
+    {
+        _isClose = false;
+        _isCatching = false;
+        _closeTimer = 0f;
+        _startFallbackTimer = _startFallbackDuration;
+        _targetDistanceBehind = _fallbackDistance + extraDistance;
+        _currentDistanceBehind = Mathf.Max(_currentDistanceBehind, _targetDistanceBehind);
     }
 
     /// <summary>

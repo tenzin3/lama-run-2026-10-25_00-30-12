@@ -9,6 +9,21 @@ public class CornerSegment : TrackSegment
     [SerializeField] private float _turnZoneEndLocalZ = 21f;
     [SerializeField] private float _overrunEndLocalZ = 26.5f;
 
+    // All corners currently in the world. Used during Meditation Flight, when Tenzin
+    // flies above the corner trigger boxes and never touches them.
+    public static readonly System.Collections.Generic.List<CornerSegment> Active =
+        new System.Collections.Generic.List<CornerSegment>();
+
+    private void OnEnable()
+    {
+        if (!Active.Contains(this)) Active.Add(this);
+    }
+
+    private void OnDisable()
+    {
+        Active.Remove(this);
+    }
+
     public override bool IsCorner => true;
     public TurnDirection Direction => _turnDirection;
     public bool HasTurned { get; private set; }
@@ -26,6 +41,15 @@ public class CornerSegment : TrackSegment
         if (HasTurned) return false;
         Vector3 localPos = transform.InverseTransformPoint(worldPos);
         return localPos.z >= _turnZoneStartLocalZ && localPos.z <= _turnZoneEndLocalZ && Mathf.Abs(localPos.x) <= 4f;
+    }
+
+    // True from the start of the turn zone until the overrun edge, ignoring height,
+    // so a flying player is still detected.
+    public bool IsInFlightCornerZone(Vector3 worldPos)
+    {
+        if (HasTurned) return false;
+        Vector3 localPos = transform.InverseTransformPoint(worldPos);
+        return localPos.z >= _turnZoneStartLocalZ && localPos.z <= _overrunEndLocalZ && Mathf.Abs(localPos.x) <= 4f;
     }
 
     public bool HasPlayerRunOffEdge(Vector3 worldPos)

@@ -29,6 +29,13 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _chaserHintPanel;
     [SerializeField] private TextMeshProUGUI _chaserHintText;
 
+    [Header("Meditation Bar (Runtime Created)")]
+    private GameObject _meditationBarPanel;
+    private Image _meditationFillImage;
+    private Image _meditationGlowImage;
+    private TextMeshProUGUI _meditationText;
+    private bool _isFlightGlowing = false;
+
     [Header("Pause Screen")]
     [SerializeField] private GameObject _pausePanel;
     [SerializeField] private Button _resumeButton;
@@ -131,6 +138,20 @@ public class UIManager : MonoBehaviour
         }
 
         UpdateMuteButtonText();
+        EnsureMeditationBarUI();
+    }
+
+    private void Update()
+    {
+        if (_isFlightGlowing && _meditationGlowImage != null)
+        {
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 8f);
+            _meditationGlowImage.color = new Color(1.0f, 0.88f, 0.35f, pulse * 0.9f);
+            if (_meditationFillImage != null)
+            {
+                _meditationFillImage.color = Color.Lerp(MeterFillColor, MeterFullColor, pulse);
+            }
+        }
     }
 
     public static bool IsTouchDevice()
@@ -221,6 +242,121 @@ public class UIManager : MonoBehaviour
         {
             _speedText.text = $"{speed:F1} m/s";
         }
+    }
+
+    public void UpdateMeditationBar(int currentInCycle, int cycleTarget, bool isFlightActive)
+    {
+        EnsureMeditationBarUI();
+
+        if (_meditationFillImage != null)
+        {
+            float fillRatio = Mathf.Clamp01((float)currentInCycle / Mathf.Max(1, cycleTarget));
+            _meditationFillImage.fillAmount = fillRatio;
+        }
+
+
+        _isFlightGlowing = isFlightActive;
+
+        if (!isFlightActive)
+        {
+            if (_meditationGlowImage != null)
+            {
+                _meditationGlowImage.color = new Color(1.0f, 0.88f, 0.35f, 0f);
+            }
+            if (_meditationFillImage != null)
+            {
+                _meditationFillImage.color = MeterFillColor;
+            }
+        }
+    }
+
+    // Temple Run-style meter: a slim vertical gold tube under the pause button that
+    // fills from bottom to top as lamps are collected. No text. Created at runtime.
+    private static readonly Color MeterFillColor = new Color(1.0f, 0.74f, 0.22f, 1f);   // butter-lamp gold
+    private static readonly Color MeterFullColor = new Color(1.0f, 0.92f, 0.55f, 1f);   // bright gold when glowing
+    private static readonly Color MeterFrameColor = new Color(0.78f, 0.58f, 0.22f, 1f); // gold frame
+    private static readonly Color MeterInsideColor = new Color(0.12f, 0.06f, 0.05f, 0.80f);
+
+    private void EnsureMeditationBarUI()
+    {
+        if (_meditationBarPanel != null) return;
+
+        Transform parent = _pauseButton != null ? _pauseButton.transform.parent
+                         : (_hudPanel != null ? _hudPanel.transform : null);
+        if (parent == null) return;
+
+        Transform existing = parent.Find("MeditationMeter");
+        if (existing != null)
+        {
+            _meditationBarPanel = existing.gameObject;
+            var fill = existing.Find("Inside/Fill");
+            if (fill != null) _meditationFillImage = fill.GetComponent<Image>();
+            var glow = existing.Find("Glow");
+            if (glow != null) _meditationGlowImage = glow.GetComponent<Image>();
+            return;
+        }
+
+        const float width = 26f;
+        const float height = 170f;
+        const float frame = 3f;
+
+        // Root: placed under the pause button (pause is 70x70 at (-40,-40) from the top-right).
+        GameObject meter = new GameObject("MeditationMeter", typeof(RectTransform));
+        meter.transform.SetParent(parent, false);
+        RectTransform rt = meter.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1f, 1f);
+        rt.anchorMax = new Vector2(1f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(-75f, -125f);
+        rt.sizeDelta = new Vector2(width, height);
+
+        // Glow behind the frame (visible while flying).
+        GameObject glowObj = new GameObject("Glow", typeof(RectTransform), typeof(Image));
+        glowObj.transform.SetParent(meter.transform, false);
+        RectTransform glowRt = glowObj.GetComponent<RectTransform>();
+        glowRt.anchorMin = Vector2.zero;
+        glowRt.anchorMax = Vector2.one;
+        glowRt.sizeDelta = new Vector2(12f, 12f);
+        _meditationGlowImage = glowObj.GetComponent<Image>();
+        _meditationGlowImage.color = new Color(1f, 0.88f, 0.35f, 0f);
+        _meditationGlowImage.raycastTarget = false;
+
+        // Gold frame.
+        Image frameImg = meter.AddComponent<Image>();
+        frameImg.color = MeterFrameColor;
+        frameImg.raycastTarget = false;
+
+        // Dark inside of the tube.
+        GameObject inside = new GameObject("Inside", typeof(RectTransform), typeof(Image));
+        inside.transform.SetParent(meter.transform, false);
+        RectTransform inRt = inside.GetComponent<RectTransform>();
+        inRt.anchorMin = Vector2.zero;
+        inRt.anchorMax = Vector2.one;
+        inRt.sizeDelta = new Vector2(-2f * frame, -2f * frame);
+        Image inImg = inside.GetComponent<Image>();
+        inImg.color = MeterInsideColor;
+        inImg.raycastTarget = false;
+
+        // Fill, rising from the bottom.
+        GameObject fillObj = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+        fillObj.transform.SetParent(inside.transform, false);
+        RectTransform fillRt = fillObj.GetComponent<RectTransform>();
+        fillRt.anchorMin = Vector2.zero;
+        fillRt.anchorMax = Vector2.one;
+        fillRt.sizeDelta = Vector2.zero;
+        _meditationFillImage = fillObj.GetComponent<Image>();
+        // A Filled image needs a sprite to fill; use a 1x1 white texture.
+        _meditationFillImage.sprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
+        _meditationFillImage.color = MeterFillColor;
+        _meditationFillImage.type = Image.Type.Filled;
+        _meditationFillImage.fillMethod = Image.FillMethod.Vertical;
+        _meditationFillImage.fillOrigin = (int)Image.OriginVertical.Bottom;
+        _meditationFillImage.fillAmount = 0f;
+        _meditationFillImage.raycastTarget = false;
+
+        _meditationText = null; // no numbers on the meter
+
+        _meditationBarPanel = meter;
     }
 
     public void ShowLangurHint()

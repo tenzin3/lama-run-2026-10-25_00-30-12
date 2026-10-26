@@ -66,6 +66,10 @@ public class PlayerController : MonoBehaviour
     private static readonly int AnimStateSlide = Animator.StringToHash("Slide");
     private static readonly int AnimStateFall = Animator.StringToHash("Fall");
     private static readonly int AnimStateStumble = Animator.StringToHash("Stumble");
+    private static readonly int AnimStateMeditate = Animator.StringToHash("Meditate");
+
+    [Header("Power-ups")]
+    [SerializeField] private MeditationFlight _meditationFlight;
 
     // Movement state
     private int _currentLane = 0; // -1: Left, 0: Mid, 1: Right
@@ -117,6 +121,7 @@ public class PlayerController : MonoBehaviour
     public bool IsDead => _isDead;
     public bool IsSliding => _isSliding;
     public bool IsGrounded => _isGrounded;
+    public float GroundY => _groundY;
     public int CurrentLane => _currentLane;
     public float DistanceTraveled => _distanceTraveled;
     public float TargetYaw => _targetHeading.eulerAngles.y;
@@ -124,8 +129,47 @@ public class PlayerController : MonoBehaviour
     public Vector3 RightDirection => _targetHeading * Vector3.right;
     public bool IsInTurnZone => _currentCorner != null && !_currentCorner.HasTurned && _currentCorner.IsPlayerInTurnZone(transform.position);
 
+    public void PlayMeditateAnimation(float crossFade = 0.2f)
+    {
+        if (_isSliding) StopSlide();
+        PlayAnimation(AnimStateMeditate, crossFade);
+    }
+
+    public void PlayRunAnimation(float crossFade = 0.25f)
+    {
+        PlayAnimation(AnimStateRun, crossFade);
+    }
+
+    public void OnMeditationFlightLanded()
+    {
+        Vector3 pos = transform.position;
+        pos.y = _groundY;
+        transform.position = pos;
+        _verticalVelocity = 0f;
+        _isGrounded = true;
+
+        if (!_isDead && !_isSliding)
+        {
+            PlayAnimation(AnimStateRun, 0.25f);
+        }
+
+        if (EffectsManager.Instance != null)
+        {
+            EffectsManager.Instance.EmitLandingDust(transform.position);
+        }
+    }
+
     private void Awake()
     {
+        if (_meditationFlight == null)
+        {
+            _meditationFlight = GetComponent<MeditationFlight>();
+        }
+        if (_meditationFlight == null)
+        {
+            _meditationFlight = gameObject.AddComponent<MeditationFlight>();
+        }
+
         _capsuleCollider = GetComponent<CapsuleCollider>();
         if (_capsuleCollider != null)
         {
@@ -311,6 +355,10 @@ public class PlayerController : MonoBehaviour
             float speed = GameManager.Instance != null ? GameManager.Instance.CurrentSpeed : 12.0f;
             _animator.speed = Mathf.Max(0.1f, speed / _baseRunAnimSpeed);
         }
+        else if (_currentAnimState == AnimStateMeditate)
+        {
+            _animator.speed = 1.0f;
+        }
         else
         {
             _animator.speed = 1.0f;
@@ -350,8 +398,36 @@ public class PlayerController : MonoBehaviour
 
     private void CheckCornerEdge()
     {
+        // While flying, Tenzin is above the corner trigger boxes, so find the corner by position.
+        if (_meditationFlight != null && _meditationFlight.IsFlying &&
+            (_currentCorner == null || _currentCorner.HasTurned))
+        {
+            var corners = CornerSegment.Active;
+            for (int i = 0; i < corners.Count; i++)
+            {
+                CornerSegment c = corners[i];
+                if (c != null && c.IsInFlightCornerZone(transform.position))
+                {
+                    _currentCorner = c;
+                    break;
+                }
+            }
+        }
+
         if (_currentCorner != null && !_currentCorner.HasTurned)
         {
+            if (_meditationFlight != null && _meditationFlight.IsFlying)
+            {
+                // Auto-turn when reaching or entering corner pivot area
+                Vector3 fromPivot = transform.position - _currentCorner.PivotPosition;
+                float forwardProgress = Vector3.Dot(fromPivot, ForwardDirection);
+                if (forwardProgress >= -0.5f || _currentCorner.HasPlayerRunOffEdge(transform.position))
+                {
+                    ExecuteTurn(_currentCorner);
+                }
+                return;
+            }
+
             if (_currentCorner.HasPlayerRunOffEdge(transform.position))
             {
                 FallOffEdge();
@@ -374,12 +450,15 @@ public class PlayerController : MonoBehaviour
                 OnTurnOrLaneInput(TurnDirection.Right);
             }
 
-            if (keyboard.spaceKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame)
+            // Disable jump/slide during meditation flight
+            bool canJumpOrSlide = _meditationFlight == null || !_meditationFlight.IsFlying;
+
+            if (canJumpOrSlide && (keyboard.spaceKey.wasPressedThisFrame || keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame))
             {
                 Jump();
             }
 
-            if (keyboard.downArrowKey.wasPressedThisFrame || keyboard.sKey.wasPressedThisFrame)
+            if (canJumpOrSlide && (keyboard.downArrowKey.wasPressedThisFrame || keyboard.sKey.wasPressedThisFrame))
             {
                 Slide();
             }
@@ -515,6 +594,8 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
+            if (_meditationFlight != null && _meditationFlight.IsFlying) return;
+
             if (delta.y > 0f) Jump();
             else Slide();
         }
@@ -524,6 +605,21 @@ public class PlayerController : MonoBehaviour
     {
         if (IsInTurnZone)
         {
+            if (_meditationFlight != null && _meditationFlight.IsFlying)
+            {
+                // While flying, lane changes still work and corners turn automatically,
+                // but if player presses turn direction, turn or lane change safely
+                if (_currentCorner != null && dir == _currentCorner.Direction)
+                {
+                    ExecuteTurn(_currentCorner);
+                }
+                else
+                {
+                    ChangeLane((int)dir);
+                }
+                return;
+            }
+
             AttemptTurn(dir);
         }
         else
@@ -596,6 +692,7 @@ public class PlayerController : MonoBehaviour
     public void FallOffEdge()
     {
         if (_isDead) return;
+        if (_meditationFlight != null && (_meditationFlight.IsFlying || _meditationFlight.IsInvincible)) return;
 
         _isDead = true;
         _isGrounded = false;
@@ -714,6 +811,16 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateVerticalMovement()
     {
+        if (_meditationFlight != null && _meditationFlight.IsFlying)
+        {
+            Vector3 flightPos = transform.position;
+            flightPos.y = _groundY + _meditationFlight.CurrentHeightOffset;
+            transform.position = flightPos;
+            _verticalVelocity = 0f;
+            _isGrounded = false;
+            return;
+        }
+
         Vector3 pos = transform.position;
 
         if (!_isGrounded)
@@ -781,6 +888,11 @@ public class PlayerController : MonoBehaviour
             speed *= 0.7f;
         }
 
+        if (_meditationFlight != null && _meditationFlight.IsFlying)
+        {
+            speed *= _meditationFlight.SpeedMultiplier;
+        }
+
         float deltaDist = speed * Time.deltaTime;
         _distanceTraveled += deltaDist;
         transform.position += ForwardDirection * deltaDist;
@@ -805,6 +917,7 @@ public class PlayerController : MonoBehaviour
     public void HitObstacle(Obstacle obstacle)
     {
         if (_isDead) return;
+        if (_meditationFlight != null && (_meditationFlight.IsFlying || _meditationFlight.IsInvincible)) return;
 
         if (_stumbleInvulnerabilityTimer > 0f && _lastStumbledObstacle == obstacle)
         {
@@ -897,6 +1010,8 @@ public class PlayerController : MonoBehaviour
     private void DieByLangurCatch()
     {
         if (_isDead) return;
+        if (_meditationFlight != null && (_meditationFlight.IsFlying || _meditationFlight.IsInvincible)) return;
+
         _isDead = true;
 
         PlayAnimation(AnimStateFall, 0.1f);
@@ -920,6 +1035,8 @@ public class PlayerController : MonoBehaviour
     private void DieHeadOn()
     {
         if (_isDead) return;
+        if (_meditationFlight != null && (_meditationFlight.IsFlying || _meditationFlight.IsInvincible)) return;
+
         _isDead = true;
 
         PlayAnimation(AnimStateFall);

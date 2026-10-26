@@ -131,6 +131,11 @@ public class GameManager : MonoBehaviour
         _isPaused = false;
         Time.timeScale = 1f;
 
+        if (MeditationFlight.Instance != null)
+        {
+            MeditationFlight.Instance.ResetRun();
+        }
+
         if (UIManager.Instance != null)
         {
             UIManager.Instance.OnGameStarted();
@@ -169,6 +174,11 @@ public class GameManager : MonoBehaviour
         if (_isGameOver) return;
 
         _coins += amount;
+
+        if (MeditationFlight.Instance != null)
+        {
+            MeditationFlight.Instance.OnLampCollected(amount);
+        }
 
         if (UIManager.Instance != null)
         {

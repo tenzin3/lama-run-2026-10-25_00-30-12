@@ -29,3 +29,12 @@ Tenzin's original Run animation (from the AI-generated character package) was ma
 **Note:** Enforce T-Pose also affects how his original Idle, Jump, Slide, Stumble and Fall clips play, since they share the same avatar. Check them; if any look worse, replace them with Mixamo versions the same way.
 
 **Lesson:** for any new human animation, use Mixamo (or another motion-capture source) rather than asking the Assistant: it can only write movement as code, which looks robotic.
+
+## Later the same day: slide and jump
+
+The same method replaced **Slide** and **Jump**:
+
+| Clip | Settings | Notes |
+|---|---|---|
+| **Running Slide** | Humanoid; Loop Time off; Bake Into Pose for rotation and Y (Original); **XZ not baked** | Trimmed to frames **0–22** (0.73 s) to match the game's 0.75 s slide. With XZ baked, the slide's forward motion stayed in the pose and Tenzin "teleported" back when it ended; leaving XZ unbaked sends it to root motion, which the game ignores (Apply Root Motion is off). |
+| **Running Jump** | Humanoid; Loop Time off; Bake Into Pose for rotation (Original); **Y and XZ not baked** | The game controls jump height, so the animation's own rise and forward motion are ignored. Trimmed to frames **0–20** (the game's jump lasts about 0.65 s). |

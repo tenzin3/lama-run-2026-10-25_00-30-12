@@ -15,7 +15,8 @@ Every prompt given to Unity Assistant, in order. Each file has the exact prompt,
 | 09 | [The chase](09-the-chase.md) | A langur (from primitives) chases Tenzin; clipping obstacles makes him stumble, and a second stumble while it's close means it catches him. Chatter and screech sounds |
 | 10 | [Visual polish](10-visual-polish.md) | Blue morning sky, white sunlight and sharper shadows, sky-tinted ambient, adjusted materials, bloom and colour grading. First attempt (Ultra) turned the game magenta and was reverted. 190 credits for both |
 | 11 | [Phone and web (scripts)](11-phone-and-web.md) | Touch swipes, nearest-4 lamp lights, safe-area script, portrait camera, clean-up. Stopped before the scene wiring (still to do by hand). 229 credits |
-| 12 | [Natural running animation](12-mixamo-run.md) | Done by hand, 0 credits: Mixamo motion-captured Running replaces the robotic run; Tenzin's avatar set to a proper T-pose to fix arms held behind him |
+| 12 | [Natural running animation](12-mixamo-run.md) | Done by hand, 0 credits: Mixamo motion-captured Running, Running Slide and Running Jump replace the robotic animations; Tenzin's avatar set to a proper T-pose to fix arms held behind him |
+| 13 | [Meditation Flight power-up](13-meditation-flight.md) | Lamps earn a flight (200, 500, 900…): Tenzin meditates in the air, glowing, with light streaks; gold meter. 259 credits plus free fixes by Claude (corners while flying, meter, effects) |
 
 ## Adding a prompt
 
