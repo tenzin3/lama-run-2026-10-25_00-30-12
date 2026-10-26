@@ -7,6 +7,10 @@ public class EffectsManager : MonoBehaviour
     private ParticleSystem _dustParticleSystem;
     private ParticleSystem _sparkleParticleSystem;
 
+    private static Texture2D s_softCircleTex;
+    private static Material s_dustMat;
+    private static Material s_sparkleMat;
+
     private Material _dustMat;
     private Material _sparkleMat;
     private Texture2D _softCircleTex;
@@ -55,7 +59,12 @@ public class EffectsManager : MonoBehaviour
 
     private void SetupParticleSystems()
     {
-        _softCircleTex = GenerateSoftCircleTexture(64);
+        if (s_softCircleTex == null)
+        {
+            s_softCircleTex = GenerateSoftCircleTexture(64);
+            s_softCircleTex.name = "FX_SoftCircleTex";
+        }
+        _softCircleTex = s_softCircleTex;
 
         Shader particleShader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
         if (particleShader == null)
@@ -64,55 +73,60 @@ public class EffectsManager : MonoBehaviour
         }
 
         // Dust material: alpha-blended, pale stone colour, soft and semi-transparent
-        if (particleShader != null)
+        if (s_dustMat == null && particleShader != null)
         {
-            _dustMat = new Material(particleShader);
-            _dustMat.name = "FX_DustMat";
-            if (_dustMat.HasProperty("_BaseMap"))
+            s_dustMat = new Material(particleShader);
+            s_dustMat.name = "FX_DustMat";
+            if (s_dustMat.HasProperty("_BaseMap"))
             {
-                _dustMat.SetTexture("_BaseMap", _softCircleTex);
+                s_dustMat.SetTexture("_BaseMap", _softCircleTex);
             }
-            if (_dustMat.HasProperty("_MainTex"))
+            if (s_dustMat.HasProperty("_MainTex"))
             {
-                _dustMat.SetTexture("_MainTex", _softCircleTex);
+                s_dustMat.SetTexture("_MainTex", _softCircleTex);
             }
-            _dustMat.mainTexture = _softCircleTex;
-            _dustMat.SetColor("_BaseColor", Color.white);
-            _dustMat.SetFloat("_Surface", 1f); // Transparent
-            _dustMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-            _dustMat.SetFloat("_Blend", 0f);   // Alpha blend
-            _dustMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            _dustMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            _dustMat.SetInt("_SrcBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
-            _dustMat.SetInt("_DstBlendAlpha", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            _dustMat.SetInt("_ZWrite", 0);
-            _dustMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-            _dustMat.SetOverrideTag("RenderType", "Transparent");
-
-            // Lamp sparkle material: additive, gold, soft
-            _sparkleMat = new Material(particleShader);
-            _sparkleMat.name = "FX_SparkleMat";
-            if (_sparkleMat.HasProperty("_BaseMap"))
-            {
-                _sparkleMat.SetTexture("_BaseMap", _softCircleTex);
-            }
-            if (_sparkleMat.HasProperty("_MainTex"))
-            {
-                _sparkleMat.SetTexture("_MainTex", _softCircleTex);
-            }
-            _sparkleMat.mainTexture = _softCircleTex;
-            _sparkleMat.SetColor("_BaseColor", Color.white);
-            _sparkleMat.SetFloat("_Surface", 1f); // Transparent
-            _sparkleMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-            _sparkleMat.SetFloat("_Blend", 2f);   // Additive
-            _sparkleMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            _sparkleMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
-            _sparkleMat.SetInt("_SrcBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
-            _sparkleMat.SetInt("_DstBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
-            _sparkleMat.SetInt("_ZWrite", 0);
-            _sparkleMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-            _sparkleMat.SetOverrideTag("RenderType", "Transparent");
+            s_dustMat.mainTexture = _softCircleTex;
+            s_dustMat.SetColor("_BaseColor", Color.white);
+            s_dustMat.SetFloat("_Surface", 1f); // Transparent
+            s_dustMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            s_dustMat.SetFloat("_Blend", 0f);   // Alpha blend
+            s_dustMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            s_dustMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            s_dustMat.SetInt("_SrcBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
+            s_dustMat.SetInt("_DstBlendAlpha", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            s_dustMat.SetInt("_ZWrite", 0);
+            s_dustMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            s_dustMat.SetOverrideTag("RenderType", "Transparent");
         }
+        _dustMat = s_dustMat;
+
+        // Lamp sparkle material: additive, gold, soft
+        if (s_sparkleMat == null && particleShader != null)
+        {
+            s_sparkleMat = new Material(particleShader);
+            s_sparkleMat.name = "FX_SparkleMat";
+            if (s_sparkleMat.HasProperty("_BaseMap"))
+            {
+                s_sparkleMat.SetTexture("_BaseMap", _softCircleTex);
+            }
+            if (s_sparkleMat.HasProperty("_MainTex"))
+            {
+                s_sparkleMat.SetTexture("_MainTex", _softCircleTex);
+            }
+            s_sparkleMat.mainTexture = _softCircleTex;
+            s_sparkleMat.SetColor("_BaseColor", Color.white);
+            s_sparkleMat.SetFloat("_Surface", 1f); // Transparent
+            s_sparkleMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            s_sparkleMat.SetFloat("_Blend", 2f);   // Additive
+            s_sparkleMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            s_sparkleMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            s_sparkleMat.SetInt("_SrcBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
+            s_sparkleMat.SetInt("_DstBlendAlpha", (int)UnityEngine.Rendering.BlendMode.One);
+            s_sparkleMat.SetInt("_ZWrite", 0);
+            s_sparkleMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            s_sparkleMat.SetOverrideTag("RenderType", "Transparent");
+        }
+        _sparkleMat = s_sparkleMat;
 
         // 1. Dust Particle System (World Space)
         GameObject dustObj = new GameObject("FX_DustParticles");
@@ -264,11 +278,15 @@ public class EffectsManager : MonoBehaviour
         }
     }
 
+    public void ClearParticles()
+    {
+        if (_dustParticleSystem != null) _dustParticleSystem.Clear();
+        if (_sparkleParticleSystem != null) _sparkleParticleSystem.Clear();
+    }
+
     private void OnDestroy()
     {
-        if (_dustMat != null) Destroy(_dustMat);
-        if (_sparkleMat != null) Destroy(_sparkleMat);
-        if (_softCircleTex != null) Destroy(_softCircleTex);
+        // Static procedural texture and materials are kept alive across scene reloads
     }
 }
 

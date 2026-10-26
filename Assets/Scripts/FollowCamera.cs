@@ -21,6 +21,10 @@ public class FollowCamera : MonoBehaviour
     [SerializeField] private float _baseFOV = 60f;
     [SerializeField] private float _maxFOV = 69f;
     [SerializeField] private float _fovLerpSpeed = 3f;
+    [Tooltip("Target base FOV in portrait mode (aspect < 1.0) so all 3 lanes stay visible.")]
+    [SerializeField] private float _portraitBaseFOV = 82f;
+    [Tooltip("Target max FOV in portrait mode at top running speed.")]
+    [SerializeField] private float _portraitMaxFOV = 92f;
 
     private float _currentYaw;
     private float _yawVelocity;
@@ -52,7 +56,9 @@ public class FollowCamera : MonoBehaviour
         _cameraComponent = GetComponent<Camera>();
         if (_cameraComponent != null)
         {
-            _cameraComponent.fieldOfView = _baseFOV;
+            float aspect = _cameraComponent.aspect;
+            float portraitFactor = aspect < 1.0f ? Mathf.Clamp01((1.0f - aspect) / 0.55f) : 0f;
+            _cameraComponent.fieldOfView = Mathf.Lerp(_baseFOV, _portraitBaseFOV, portraitFactor);
         }
     }
 
@@ -89,11 +95,22 @@ public class FollowCamera : MonoBehaviour
 
     private void LateUpdate()
     {
-        // 1. Dynamic FOV with speed
-        if (_cameraComponent != null && GameManager.Instance != null)
+        // 1. Dynamic FOV with speed and screen aspect ratio (widened in portrait for lane visibility)
+        if (_cameraComponent != null)
         {
-            float speedRatio = Mathf.InverseLerp(GameManager.Instance.StartSpeed, GameManager.Instance.MaxSpeed, GameManager.Instance.CurrentSpeed);
-            float targetFOV = Mathf.Lerp(_baseFOV, _maxFOV, speedRatio);
+            float aspect = _cameraComponent.aspect;
+            float portraitFactor = aspect < 1.0f ? Mathf.Clamp01((1.0f - aspect) / 0.55f) : 0f;
+
+            float currentBaseFOV = Mathf.Lerp(_baseFOV, _portraitBaseFOV, portraitFactor);
+            float currentMaxFOV = Mathf.Lerp(_maxFOV, _portraitMaxFOV, portraitFactor);
+
+            float speedRatio = 0f;
+            if (GameManager.Instance != null)
+            {
+                speedRatio = Mathf.InverseLerp(GameManager.Instance.StartSpeed, GameManager.Instance.MaxSpeed, GameManager.Instance.CurrentSpeed);
+            }
+
+            float targetFOV = Mathf.Lerp(currentBaseFOV, currentMaxFOV, speedRatio);
             _cameraComponent.fieldOfView = Mathf.Lerp(_cameraComponent.fieldOfView, targetFOV, _fovLerpSpeed * Time.deltaTime);
         }
 

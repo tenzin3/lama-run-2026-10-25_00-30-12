@@ -6,6 +6,16 @@ public class AudioManager : MonoBehaviour
 
     private const string PREF_MUTED = "TenzinRun_AudioMuted";
 
+    private static AudioClip s_jumpClip;
+    private static AudioClip s_slideClip;
+    private static AudioClip s_lampChimeClip;
+    private static AudioClip s_turnWhooshClip;
+    private static AudioClip s_crashThudClip;
+    private static AudioClip s_singingBowlClip;
+    private static AudioClip s_langurChatterClip;
+    private static AudioClip s_langurScreechClip;
+    private static bool s_clipsGenerated = false;
+
     private AudioClip _jumpClip;
     private AudioClip _slideClip;
     private AudioClip _lampChimeClip;
@@ -115,16 +125,39 @@ public class AudioManager : MonoBehaviour
 
     private void GenerateProceduralClips()
     {
+        if (s_clipsGenerated)
+        {
+            _jumpClip = s_jumpClip;
+            _slideClip = s_slideClip;
+            _lampChimeClip = s_lampChimeClip;
+            _turnWhooshClip = s_turnWhooshClip;
+            _crashThudClip = s_crashThudClip;
+            _singingBowlClip = s_singingBowlClip;
+            _langurChatterClip = s_langurChatterClip;
+            _langurScreechClip = s_langurScreechClip;
+            return;
+        }
+
         const int sampleRate = 44100;
 
-        _jumpClip = GenerateJumpClip(sampleRate);
-        _slideClip = GenerateSlideClip(sampleRate);
-        _lampChimeClip = GenerateLampChimeClip(sampleRate);
-        _turnWhooshClip = GenerateTurnWhooshClip(sampleRate);
-        _crashThudClip = GenerateCrashThudClip(sampleRate);
-        _singingBowlClip = GenerateSingingBowlClip(sampleRate);
-        _langurChatterClip = GenerateLangurChatterClip(sampleRate);
-        _langurScreechClip = GenerateLangurScreechClip(sampleRate);
+        s_jumpClip = GenerateJumpClip(sampleRate);
+        s_slideClip = GenerateSlideClip(sampleRate);
+        s_lampChimeClip = GenerateLampChimeClip(sampleRate);
+        s_turnWhooshClip = GenerateTurnWhooshClip(sampleRate);
+        s_crashThudClip = GenerateCrashThudClip(sampleRate);
+        s_singingBowlClip = GenerateSingingBowlClip(sampleRate);
+        s_langurChatterClip = GenerateLangurChatterClip(sampleRate);
+        s_langurScreechClip = GenerateLangurScreechClip(sampleRate);
+        s_clipsGenerated = true;
+
+        _jumpClip = s_jumpClip;
+        _slideClip = s_slideClip;
+        _lampChimeClip = s_lampChimeClip;
+        _turnWhooshClip = s_turnWhooshClip;
+        _crashThudClip = s_crashThudClip;
+        _singingBowlClip = s_singingBowlClip;
+        _langurChatterClip = s_langurChatterClip;
+        _langurScreechClip = s_langurScreechClip;
     }
 
     private AudioClip GenerateJumpClip(int sampleRate)

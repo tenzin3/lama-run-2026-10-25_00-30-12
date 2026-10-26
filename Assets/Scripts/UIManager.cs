@@ -21,6 +21,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _coinsText;
     [SerializeField] private TextMeshProUGUI _speedText;
     [SerializeField] private Button _pauseButton;
+    [SerializeField] private Button _hudMuteButton;
+    [SerializeField] private TextMeshProUGUI _hudMuteText;
+    [SerializeField] private TextMeshProUGUI _controlsHintText;
 
     [Header("Chaser Hint")]
     [SerializeField] private GameObject _chaserHintPanel;
@@ -66,6 +69,11 @@ public class UIManager : MonoBehaviour
             _startScreenMuteButton.onClick.AddListener(OnMuteButtonClicked);
         }
 
+        if (_hudMuteButton != null)
+        {
+            _hudMuteButton.onClick.AddListener(OnMuteButtonClicked);
+        }
+
         if (_pauseButton != null)
         {
             _pauseButton.onClick.AddListener(OnPauseClicked);
@@ -94,6 +102,76 @@ public class UIManager : MonoBehaviour
         // Initial state
         if (_pausePanel != null) _pausePanel.SetActive(false);
         if (_gameOverPanel != null) _gameOverPanel.SetActive(false);
+    }
+
+    private void Start()
+    {
+        if (_controlsHintText == null && _hudPanel != null)
+        {
+            var hint = _hudPanel.transform.Find("ControlsHint");
+            if (hint != null)
+            {
+                _controlsHintText = hint.GetComponent<TextMeshProUGUI>();
+            }
+        }
+
+        // Apply safe area component to HUD panel if missing
+        if (_hudPanel != null && _hudPanel.GetComponent<SafeArea>() == null)
+        {
+            _hudPanel.AddComponent<SafeArea>();
+        }
+
+        if (IsTouchDevice())
+        {
+            SetTouchControlsHint();
+        }
+        else
+        {
+            SetKeyboardControlsHint();
+        }
+
+        UpdateMuteButtonText();
+    }
+
+    public static bool IsTouchDevice()
+    {
+        if (Application.isMobilePlatform || SystemInfo.deviceType == DeviceType.Handheld)
+        {
+            return true;
+        }
+
+        if (UnityEngine.InputSystem.Touchscreen.current != null)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public void SetTouchControlsHint()
+    {
+        if (_controlsHintText != null)
+        {
+            _controlsHintText.text = "Swipe to move · Swipe up to jump · Swipe down to slide";
+        }
+
+        if (_startPromptText != null)
+        {
+            _startPromptText.text = "Tap to run";
+        }
+    }
+
+    public void SetKeyboardControlsHint()
+    {
+        if (_controlsHintText != null)
+        {
+            _controlsHintText.text = "A/D or Arrows / Swipe: Change Lane   |   W/Space / Swipe Up: Jump   |   S / Swipe Down: Slide";
+        }
+
+        if (_startPromptText != null)
+        {
+            _startPromptText.text = "Tap or press Space to run";
+        }
     }
 
     public void ShowStartScreen(int bestDistance)
@@ -286,9 +364,17 @@ public class UIManager : MonoBehaviour
 
     private void UpdateMuteButtonText()
     {
-        if (_startScreenMuteText != null && AudioManager.Instance != null)
+        if (AudioManager.Instance != null)
         {
-            _startScreenMuteText.text = AudioManager.Instance.IsMuted ? "SOUND: OFF" : "SOUND: ON";
+            bool muted = AudioManager.Instance.IsMuted;
+            if (_startScreenMuteText != null)
+            {
+                _startScreenMuteText.text = muted ? "SOUND: OFF" : "SOUND: ON";
+            }
+            if (_hudMuteText != null)
+            {
+                _hudMuteText.text = muted ? "OFF" : "SFX";
+            }
         }
     }
 

@@ -14,6 +14,7 @@ Every prompt given to Unity Assistant, in order. Each file has the exact prompt,
 | 08 | [Visual fixes](08-visual-fixes.md) | No more orange glow on Tenzin, grey square gone, round sparkles, camera closer so Tenzin is bigger on screen |
 | 09 | [The chase](09-the-chase.md) | A langur (from primitives) chases Tenzin; clipping obstacles makes him stumble, and a second stumble while it's close means it catches him. Chatter and screech sounds |
 | 10 | [Visual polish](10-visual-polish.md) | Blue morning sky, white sunlight and sharper shadows, sky-tinted ambient, adjusted materials, bloom and colour grading. First attempt (Ultra) turned the game magenta and was reverted. 190 credits for both |
+| 11 | [Phone and web (scripts)](11-phone-and-web.md) | Touch swipes, nearest-4 lamp lights, safe-area script, portrait camera, clean-up. Stopped before the scene wiring (still to do by hand). 229 credits |
 
 ## Adding a prompt
 

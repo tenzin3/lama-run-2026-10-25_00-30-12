@@ -29,6 +29,7 @@ A Temple Run–style endless runner starring Tenzin, a young monk, built in Unit
   </tr>
   <tr>
     <td align="center" width="33%"><img src="Screenshots/10-visual-polish.png" width="280" alt="Visual polish"><br><sub>10 · Visual polish</sub></td>
+    <td align="center" width="33%"><img src="Screenshots/11-phone-and-web.png" width="280" alt="Phone and web scripts"><br><sub>11 · Phone and web (scripts)</sub></td>
   </tr>
 </table>
 

@@ -54,7 +54,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float _laneLeanSpeed = 12.0f;
 
     [Header("Touch / Swipe Settings")]
-    [Tooltip("Minimum drag distance in pixels to register a swipe.")]
+    [Tooltip("Fraction of screen width required to register a swipe (e.g. 0.06 = 6%).")]
+    [SerializeField] private float _swipeScreenWidthRatio = 0.06f;
+    [Tooltip("Minimum drag distance in pixels fallback.")]
     [SerializeField] private float _swipeThreshold = 40.0f;
 
     // Animation state hashes
@@ -107,6 +109,7 @@ public class PlayerController : MonoBehaviour
     // Swipe input tracking
     private Vector2 _touchStartPos;
     private bool _isSwiping = false;
+    private bool _swipeActionExecuted = false;
 
     // Components
     private CapsuleCollider _capsuleCollider;
@@ -253,20 +256,39 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        Vector2 pointerPos = Vector2.zero;
+        bool pointerDown = false;
+
         var touch = Touchscreen.current;
         if (touch != null && touch.primaryTouch.press.wasPressedThisFrame)
         {
-            GameManager.Instance.StartGame();
-            PlayAnimation(AnimStateRun);
-            return;
+            pointerPos = touch.primaryTouch.position.ReadValue();
+            pointerDown = true;
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.SetTouchControlsHint();
+            }
+        }
+        else
+        {
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.leftButton.wasPressedThisFrame)
+            {
+                pointerPos = mouse.position.ReadValue();
+                pointerDown = true;
+            }
         }
 
-        var mouse = Mouse.current;
-        if (mouse != null && mouse.leftButton.wasPressedThisFrame)
+        if (pointerDown)
         {
+            // Ignore start taps on interactive buttons such as the sound/mute button
+            if (IsPointerOverInteractiveUI(pointerPos))
+            {
+                return;
+            }
+
             GameManager.Instance.StartGame();
             PlayAnimation(AnimStateRun);
-            return;
         }
     }
 
@@ -375,44 +397,113 @@ public class PlayerController : MonoBehaviour
         bool pointerUp = false;
 
         var touch = Touchscreen.current;
-        if (touch != null && touch.primaryTouch.press.isPressed)
+        if (touch != null)
         {
-            pointerPos = touch.primaryTouch.position.ReadValue();
-            pointerDown = touch.primaryTouch.press.wasPressedThisFrame;
-            pointerActive = true;
-            pointerUp = touch.primaryTouch.press.wasReleasedThisFrame;
+            var primaryTouch = touch.primaryTouch;
+            if (primaryTouch.press.wasPressedThisFrame)
+            {
+                pointerPos = primaryTouch.position.ReadValue();
+                pointerDown = true;
+                pointerActive = true;
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.SetTouchControlsHint();
+                }
+            }
+            else if (primaryTouch.press.isPressed)
+            {
+                pointerPos = primaryTouch.position.ReadValue();
+                pointerActive = true;
+            }
+
+            if (primaryTouch.press.wasReleasedThisFrame)
+            {
+                pointerUp = true;
+                pointerPos = primaryTouch.position.ReadValue();
+            }
         }
         else
         {
             var mouse = Mouse.current;
             if (mouse != null)
             {
-                pointerPos = mouse.position.ReadValue();
-                pointerDown = mouse.leftButton.wasPressedThisFrame;
-                pointerActive = mouse.leftButton.isPressed;
-                pointerUp = mouse.leftButton.wasReleasedThisFrame;
+                if (mouse.leftButton.wasPressedThisFrame)
+                {
+                    pointerPos = mouse.position.ReadValue();
+                    pointerDown = true;
+                    pointerActive = true;
+                }
+                else if (mouse.leftButton.isPressed)
+                {
+                    pointerPos = mouse.position.ReadValue();
+                    pointerActive = true;
+                }
+
+                if (mouse.leftButton.wasReleasedThisFrame)
+                {
+                    pointerUp = true;
+                    pointerPos = mouse.position.ReadValue();
+                }
             }
         }
 
         if (pointerDown)
         {
+            // Taps on Pause button, Sound button or other interactive buttons must not count as swipes
+            if (IsPointerOverInteractiveUI(pointerPos))
+            {
+                _isSwiping = false;
+                _swipeActionExecuted = false;
+                return;
+            }
+
             _touchStartPos = pointerPos;
             _isSwiping = true;
+            _swipeActionExecuted = false;
         }
-        else if (_isSwiping && pointerActive)
+        else if (_isSwiping && pointerActive && !_swipeActionExecuted)
         {
             Vector2 delta = pointerPos - _touchStartPos;
-            if (delta.magnitude >= _swipeThreshold)
+            float threshold = Mathf.Max(15f, Screen.width * _swipeScreenWidthRatio);
+            if (delta.magnitude >= threshold)
             {
                 ExecuteSwipe(delta);
-                // Reset start pos so continued dragging can register further swipes
-                _touchStartPos = pointerPos;
+                _swipeActionExecuted = true; // Exactly one action per swipe
             }
         }
-        else if (pointerUp)
+
+        if (pointerUp)
         {
             _isSwiping = false;
+            _swipeActionExecuted = false;
         }
+    }
+
+    private bool IsPointerOverInteractiveUI(Vector2 screenPos)
+    {
+        if (UnityEngine.EventSystems.EventSystem.current == null) return false;
+
+        var eventData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current)
+        {
+            position = screenPos
+        };
+
+        var results = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+        UnityEngine.EventSystems.EventSystem.current.RaycastAll(eventData, results);
+
+        for (int i = 0; i < results.Count; i++)
+        {
+            var go = results[i].gameObject;
+            if (go == null) continue;
+
+            var btn = go.GetComponentInParent<UnityEngine.UI.Button>();
+            if (btn != null && btn.name != "ClickCatcher")
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void ExecuteSwipe(Vector2 delta)

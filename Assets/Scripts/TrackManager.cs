@@ -47,7 +47,7 @@ public class TrackManager : MonoBehaviour
     [Tooltip("Distance ahead of player to keep populated with track segments.")]
     [SerializeField] private float _viewDistanceAhead = 150f;
     [Tooltip("Distance behind player before segments are recycled/destroyed.")]
-    [SerializeField] private float _destroyDistanceBehind = 35f;
+    [SerializeField] private float _destroyDistanceBehind = 20f;
     [Tooltip("Number of safe segments spawned at the very beginning.")]
     [SerializeField] private int _initialSafeSegments = 2;
 
@@ -368,11 +368,22 @@ public class TrackManager : MonoBehaviour
 
     private void RecyclePassedSegments()
     {
-        float playerDist = _playerController != null ? _playerController.DistanceTraveled : _player.position.z;
+        if (_playerController == null && _player != null)
+        {
+            _playerController = _player.GetComponent<PlayerController>();
+        }
+
+        float playerDist = _playerController != null ? _playerController.DistanceTraveled : (_player != null ? _player.position.z : 0f);
 
         while (_activeSegments.Count > 0)
         {
             TrackSegment oldest = _activeSegments.Peek();
+            if (oldest == null)
+            {
+                _activeSegments.Dequeue();
+                continue;
+            }
+
             if (playerDist - oldest.PathEndDistance > _destroyDistanceBehind)
             {
                 _activeSegments.Dequeue();
