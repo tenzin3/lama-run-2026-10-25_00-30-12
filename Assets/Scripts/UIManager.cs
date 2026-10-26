@@ -465,19 +465,35 @@ public class UIManager : MonoBehaviour
             _finalDistanceText.text = $"Distance: {distance} m";
         }
 
+        // Only the distance is shown: the lamp count line is hidden, and the lines below move up into its place.
+        float lampsLineY = -170f;
         if (_finalCoinsText != null)
         {
-            _finalCoinsText.text = $"Butter Lamps: {coins}";
+            lampsLineY = _finalCoinsText.rectTransform.anchoredPosition.y;
+            _finalCoinsText.gameObject.SetActive(false);
         }
 
         if (_finalBestDistanceText != null)
         {
             _finalBestDistanceText.text = $"Best Distance: {bestDistance} m";
+            Vector2 p = _finalBestDistanceText.rectTransform.anchoredPosition;
+            _finalBestDistanceText.rectTransform.anchoredPosition = new Vector2(p.x, lampsLineY);
         }
 
         if (_newBestBadge != null)
         {
             _newBestBadge.SetActive(isNewBest);
+            RectTransform badgeRt = _newBestBadge.transform as RectTransform;
+            if (badgeRt != null)
+            {
+                badgeRt.anchoredPosition = new Vector2(badgeRt.anchoredPosition.x, lampsLineY - 50f);
+            }
+            // The font has no star character (it showed as empty boxes), so plain text only.
+            var badgeText = _newBestBadge.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (badgeText != null)
+            {
+                badgeText.text = "NEW BEST!";
+            }
         }
     }
 
