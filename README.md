@@ -6,9 +6,9 @@ A Temple Run–style endless runner starring Tenzin, a young monk, built in Unit
 
 ## How it looks
 
-![Tenzin Run after prompt 09: the start screen, with Tenzin standing on the stone path under prayer flags, the title "Tenzin Run", a best distance of 1,958 m, and the langur peeking in behind him at the bottom](Screenshots/09-the-chase.png)
+![Tenzin Run after prompt 10: the start screen under a clear blue morning sky, with white monastery buildings with maroon bands, prayer flags, bright snow, and Tenzin casting a sharp shadow on the stone path](Screenshots/10-visual-polish.png)
 
-*Latest: after [prompt 09](Prompts/09-the-chase.md), 25 Oct 2026. The langur now chases Tenzin.*
+*Latest: after [prompt 10](Prompts/10-visual-polish.md), 26 Oct 2026. A clear Himalayan morning.*
 
 ### Progress
 
@@ -26,6 +26,9 @@ A Temple Run–style endless runner starring Tenzin, a young monk, built in Unit
   <tr>
     <td align="center" width="33%"><img src="Screenshots/08-visual-fixes.png" width="280" alt="Visual fixes"><br><sub>08 · Visual fixes</sub></td>
     <td align="center" width="33%"><img src="Screenshots/09-the-chase.png" width="280" alt="The chase"><br><sub>09 · The chase</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><img src="Screenshots/10-visual-polish.png" width="280" alt="Visual polish"><br><sub>10 · Visual polish</sub></td>
   </tr>
 </table>
 
