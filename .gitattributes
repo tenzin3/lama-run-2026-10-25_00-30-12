@@ -169,3 +169,6 @@ Packages/packages-lock.json linguist-generated
 
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary
+
+# Web build for GitHub Pages: Pages cannot serve Git LFS files, so keep docs/ out of LFS
+docs/** !filter binary
