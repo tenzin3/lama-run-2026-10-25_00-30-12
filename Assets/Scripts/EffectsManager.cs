@@ -67,15 +67,13 @@ public class EffectsManager : MonoBehaviour
         _softCircleTex = s_softCircleTex;
 
         Shader particleShader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-        if (particleShader == null)
-        {
-            particleShader = Shader.Find("Particles/Standard Unlit");
-        }
+        // No fallback to the legacy built-in shader: it doesn't work in URP and draws magenta.
+        // If the URP particle shader is missing from a build, the effects are simply hidden.
 
         // Dust material: alpha-blended, pale stone colour, soft and semi-transparent
         if (s_dustMat == null && particleShader != null)
         {
-            s_dustMat = new Material(particleShader);
+            s_dustMat = FxMaterials.New(false, particleShader);
             s_dustMat.name = "FX_DustMat";
             if (s_dustMat.HasProperty("_BaseMap"))
             {
@@ -103,7 +101,7 @@ public class EffectsManager : MonoBehaviour
         // Lamp sparkle material: additive, gold, soft
         if (s_sparkleMat == null && particleShader != null)
         {
-            s_sparkleMat = new Material(particleShader);
+            s_sparkleMat = FxMaterials.New(true, particleShader);
             s_sparkleMat.name = "FX_SparkleMat";
             if (s_sparkleMat.HasProperty("_BaseMap"))
             {
@@ -171,6 +169,10 @@ public class EffectsManager : MonoBehaviour
         {
             dustRenderer.material = _dustMat;
         }
+        else
+        {
+            dustRenderer.enabled = false; // shader missing: hide instead of drawing magenta
+        }
 
         // 2. Lamp Golden Sparkle Particle System (World Space)
         GameObject sparkleObj = new GameObject("FX_LampSparkles");
@@ -215,6 +217,10 @@ public class EffectsManager : MonoBehaviour
         if (_sparkleMat != null)
         {
             spRenderer.material = _sparkleMat;
+        }
+        else
+        {
+            spRenderer.enabled = false; // shader missing: hide instead of drawing magenta
         }
     }
 

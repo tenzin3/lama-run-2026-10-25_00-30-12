@@ -696,10 +696,11 @@ public class MeditationFlight : MonoBehaviour
 
         var renderer = trailObj.GetComponent<ParticleSystemRenderer>();
         Shader particleShader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-        if (particleShader == null) particleShader = Shader.Find("Particles/Standard Unlit");
+        // No legacy fallback (it draws magenta in URP); hide the trail if the shader is missing.
+        if (particleShader == null) renderer.enabled = false;
         if (particleShader != null)
         {
-            Material trailMat = new Material(particleShader);
+            Material trailMat = FxMaterials.New(true, particleShader);
             trailMat.name = "FX_MeditationTrailMat";
             trailMat.SetFloat("_Surface", 1f); // Transparent
             trailMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
@@ -799,7 +800,7 @@ public class MeditationFlight : MonoBehaviour
 
     private Material CreateAdditiveMaterial(Shader shader, Texture2D tex, string name)
     {
-        Material m = new Material(shader);
+        Material m = FxMaterials.New(true, shader);
         m.name = name;
         m.SetTexture("_BaseMap", tex);
         m.SetTexture("_MainTex", tex);
