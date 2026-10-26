@@ -6,7 +6,7 @@ A Temple Run–style endless runner starring Tenzin, a young monk, built in Unit
 
 ## ▶ Play now
 
-**https://tenzin3.github.io/lama-run-2026-10-25_00-30-12/**
+**https://tenzin3.github.io/tenzin-run/**
 
 Plays right in your web browser, on a computer or a phone, with nothing to install. Tap or press Space to start; swipe (or use the arrow keys / A, D, W, S) to change lanes, jump and slide. The first load downloads the game (about 10–15 MB), so give it a few seconds.
 
