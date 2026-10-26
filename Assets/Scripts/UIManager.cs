@@ -173,7 +173,7 @@ public class UIManager : MonoBehaviour
     {
         if (_controlsHintText != null)
         {
-            _controlsHintText.text = "Tilt to move · Swipe to turn · Swipe up to jump · Swipe down to slide";
+            _controlsHintText.text = "Swipe to move · Swipe up to jump · Swipe down to slide";
         }
 
         if (_startPromptText != null)

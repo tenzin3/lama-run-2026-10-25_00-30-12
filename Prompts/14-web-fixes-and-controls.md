@@ -20,10 +20,12 @@ In the browser (phone), the Meditation Flight effects showed as **magenta square
 
 | Change | Where | Details |
 |---|---|---|
-| **Tilt to move** (Temple Run style) | `PlayerController.cs` | On phones, tilting moves Tenzin smoothly across the path (full edge at about 22°, 2.5° dead zone). Swipes still turn, jump and slide; sideways swipes only turn while tilt is active. Only switches on when the device sends accelerometer data, so computers and browsers without motion access keep swipe/key lane changes. Settings: on/off, full angle, dead zone, responsiveness, invert |
+| ~~**Tilt to move**~~ (removed again, see below) | `PlayerController.cs` | On phones, tilting moves Tenzin smoothly across the path (full edge at about 22°, 2.5° dead zone). Swipes still turn, jump and slide; sideways swipes only turn while tilt is active. Only switches on when the device sends accelerometer data, so computers and browsers without motion access keep swipe/key lane changes. Settings: on/off, full angle, dead zone, responsiveness, invert |
 | **Jump from a slide** | `PlayerController.cs` | Swiping up mid-slide cancels the slide and jumps |
 | **Camera lag and lean** | `FollowCamera.cs` | Camera trails sideways movement slightly (up to 0.9 m, 0.18 s) and leans into it (roll 3.5°, yaw 2.5°), so movement feels alive instead of locked. All values editable on Main Camera |
-| Hint text on phones | `UIManager.cs` | "Tilt to move · Swipe to turn · Swipe up to jump · Swipe down to slide" |
+| Hint text on phones | `UIManager.cs` | Back to "Swipe to move · Swipe up to jump · Swipe down to slide" |
+
+**Tilt removed:** tested on an Android phone, tilt worked but didn't feel good, so it was taken out again. Phones are back to swiping to change lanes. Camera lag/lean and jump-from-slide were kept.
 
 ## Part 3: endless run after a flight
 
@@ -35,4 +37,4 @@ In the browser (phone), the Meditation Flight effects showed as **magenta square
 - Corners are now turned automatically during the protected second after landing too, not only while flying.
 - If he leaves a corner's turn area without turning, the corner keeps tracking him, so running past its edge still ends the run once he's no longer protected.
 
-**Testing notes:** tilt works on an Android phone. Camera lag/lean and jump-from-slide tested in the editor and liked. Tilt still to test on phones (iPhone Safari may need a motion-permission prompt; Android Chrome should work directly).
+**Testing notes:** camera lag/lean and jump-from-slide tested in the editor and liked. Tilt still to test on phones (iPhone Safari may need a motion-permission prompt; Android Chrome should work directly).
